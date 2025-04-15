@@ -1,0 +1,18 @@
+FINANCE GLOSSARY - PROJECT NOTES
+
+TODO:
+	•	Create glossary.json to store terms
+	•	glossary_generator.py handles loading, adding, and markdown export
+	•	Add CLI interface for easy term editing
+	•	Add term tagging: e.g., {“term”: {“definition”: “…”, “tag”: “beginner”}}
+	•	Create glossary.html using a simple Flask or HTML template
+	•	Markdown to HTML converter for static site
+
+FEATURE IDEAS:
+	•	Add “related terms” to glossary entries
+	•	Sort glossary by level of difficulty (basic → advanced)
+	•	Connect to notebook metrics (e.g., when calculating P/E, show glossary definition)
+
+LONG TERM VISION:
+→ A personal finance learning portal
+→ Glossary + Ratios + Visualizations in a web dashboard
