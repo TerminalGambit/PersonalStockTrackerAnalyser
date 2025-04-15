@@ -1,0 +1,8 @@
+# 📘 Finance Glossary
+
+## Dividend
+A payout to shareholders from the company's profits.
+
+## P/E Ratio
+Price-to-Earnings ratio: stock price divided by earnings per share.
+
