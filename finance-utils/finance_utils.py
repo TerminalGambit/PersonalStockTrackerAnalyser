@@ -1,5 +1,3 @@
-# finance_etls.py
-
 import yfinance as yf
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -139,6 +137,75 @@ class Stock:
         • .plot_moving_averages()    → Plot 50 and 200-day moving averages
         • .compare_with(other)       → Compare with another Stock instance
         • .save_snapshot()           → Save historical data to CSV
+        • .today()                   → Return the latest available row of historical data
+        • .to_csv_custom(period)     → Save a specific period of data to CSV
+        • .get_growth()              → Calculate percentage growth over the dataset
+        • .volatility()              → Compute volatility as std of daily returns
+        • .summary()                 → Print a quick summary of key stats
+        • .plot_candlestick()        → Plot a candlestick chart (requires mplfinance)
+        • .compare_indicators(other) → Compare growth and volatility with another stock
+        • .is_bullish()              → Return True if price is above both MAs
+        • .is_bearish()              → Return True if price is below both MAs
         • self.history               → Access enriched DataFrame
         • self.info                  → Access full Yahoo metadata
         """)
+
+    def today(self):
+        """Return the latest available row of stock data."""
+        return self.history.iloc[-1]
+
+    def to_csv_custom(self, period='1y', filename=None):
+        temp_df = self._yf.history(period=period)
+        if filename is None:
+            filename = f"{self.ticker}_{period}_data.csv"
+        temp_df.to_csv(filename)
+        print(f"Saved {period} historical data to {filename}")
+
+    def get_growth(self):
+        """Calculate percentage growth from the first to the last day in the dataset."""
+        start_price = self.history["Close"].iloc[0]
+        end_price = self.history["Close"].iloc[-1]
+        return ((end_price - start_price) / start_price) * 100
+
+    def volatility(self):
+        """Return standard deviation of daily returns."""
+        return self.history["Daily Return"].std()
+
+    def summary(self):
+        """Print a brief summary of key statistics."""
+        print(f"Summary for {self.ticker}")
+        print(f"Growth: {self.get_growth():.2f}%")
+        print(f"Volatility: {self.volatility():.4f}")
+        print(f"Latest Close: {self.history['Close'].iloc[-1]:.2f} USD")
+        print(f"P/E Ratio: {self.info.get('trailingPE', 'N/A')}")
+        print(f"Market Cap: {self.info.get('marketCap', 'N/A')}")
+
+    def plot_candlestick(self):
+        """Plot candlestick chart using mplfinance."""
+        try:
+            import mplfinance as mpf
+        except ImportError:
+            print("Please install mplfinance with `pip install mplfinance` to use this method.")
+            return
+        df = self._yf.history(period="3mo")
+        df = df[["Open", "High", "Low", "Close", "Volume"]]
+        mpf.plot(df, type="candle", volume=True, title=f"{self.ticker} Candlestick Chart")
+
+    def compare_indicators(self, other_stock):
+        if not isinstance(other_stock, Stock):
+            print("Comparison requires another Stock instance.")
+            return
+
+        print(f"Comparing {self.ticker} and {other_stock.ticker}")
+        print(f"{self.ticker} Growth: {self.get_growth():.2f}% | Volatility: {self.volatility():.4f}")
+        print(f"{other_stock.ticker} Growth: {other_stock.get_growth():.2f}% | Volatility: {other_stock.volatility():.4f}")
+
+    def is_bullish(self):
+        """Simple heuristic: bullish if price is above both 50MA and 200MA."""
+        latest = self.history.iloc[-1]
+        return latest["Close"] > latest["50MA"] and latest["Close"] > latest["200MA"]
+
+    def is_bearish(self):
+        """Simple heuristic: bearish if price is below both 50MA and 200MA."""
+        latest = self.history.iloc[-1]
+        return latest["Close"] < latest["50MA"] and latest["Close"] < latest["200MA"]
