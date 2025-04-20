@@ -1,7 +1,18 @@
 import yfinance as yf
 import pandas as pd
 import matplotlib.pyplot as plt
+import os
+from pathlib import Path
+from datetime import datetime, timedelta
 
+CACHE_DIR = Path("./.stock_cache")
+CACHE_DIR.mkdir(exist_ok=True)
+
+def is_cache_valid(filepath, max_age_hours=12):
+    if not filepath.exists():
+        return False
+    mod_time = datetime.fromtimestamp(filepath.stat().st_mtime)
+    return datetime.now() - mod_time < timedelta(hours=max_age_hours)
 
 class Stock:
     def __init__(self, ticker):
@@ -10,7 +21,7 @@ class Stock:
 
         # Core data
         self.info = self._yf.info
-        self.history = self._yf.history(period="1y")
+        self.history = self._load_cached_history(period="1y")
         
         # Enrich the DataFrame with standard columns
         self.history["Daily Return"] = self.history["Close"].pct_change()
@@ -38,6 +49,18 @@ class Stock:
         self.history["20STD"] = self.history["Close"].rolling(window=20).std()
         self.history["Upper Band"] = self.history["20MA"] + 2 * self.history["20STD"]
         self.history["Lower Band"] = self.history["20MA"] - 2 * self.history["20STD"]
+
+    def _load_cached_history(self, period="1y", refresh=False):
+        cache_file = CACHE_DIR / f"{self.ticker}_{period}.csv"
+
+        if not refresh and is_cache_valid(cache_file):
+            print(f"📁 Loading cached data for {self.ticker}")
+            return pd.read_csv(cache_file, index_col=0, parse_dates=True)
+
+        print(f"🌐 Fetching fresh data for {self.ticker}")
+        df = self._yf.history(period=period)
+        df.to_csv(cache_file)
+        return df
 
     def describe(self):
         print(f"📊 {self.ticker} - {self.info.get('longName', 'Unknown Company')}")
