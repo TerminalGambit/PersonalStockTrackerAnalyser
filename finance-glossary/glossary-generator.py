@@ -28,6 +28,13 @@ if __name__ == "__main__":
     # Example usage:
     add_term("P/E Ratio", "Price-to-Earnings ratio: stock price divided by earnings per share.")
     add_term("Dividend", "A payout to shareholders from the company's profits.")
+    add_term("Market Capitalization", "Total value of a company's outstanding shares; calculated as share price × number of shares.")
+    add_term("Beta", "A measure of a stock's volatility compared to the overall market; beta > 1 means more volatile.")
+    add_term("Volume", "The number of shares traded during a specific period.")
+    add_term("Moving Average", "An average of stock prices over a period to smooth out short-term fluctuations.")
+    add_term("RSI", "Relative Strength Index: a momentum indicator measuring the magnitude of recent price changes.")
+    add_term("MACD", "Moving Average Convergence Divergence: a trend-following momentum indicator.")
+    add_term("Volatility", "Statistical measure of the dispersion of returns; often measured using standard deviation.")
+    add_term("Earnings Per Share", "A company's net profit divided by the number of outstanding shares.")
     generate_markdown()
     print("Glossary updated and Markdown generated.")
-

@@ -1,4 +1,12 @@
 {
+    "P/E Ratio": "Price-to-Earnings ratio: stock price divided by earnings per share.",
     "Dividend": "A payout to shareholders from the company's profits.",
-    "P/E Ratio": "Price-to-Earnings ratio: stock price divided by earnings per share."
+    "Market Capitalization": "Total value of a company's outstanding shares; calculated as share price \u00d7 number of shares.",
+    "Beta": "A measure of a stock's volatility compared to the overall market; beta > 1 means more volatile.",
+    "Volume": "The number of shares traded during a specific period.",
+    "Moving Average": "An average of stock prices over a period to smooth out short-term fluctuations.",
+    "RSI": "Relative Strength Index: a momentum indicator measuring the magnitude of recent price changes.",
+    "MACD": "Moving Average Convergence Divergence: a trend-following momentum indicator.",
+    "Volatility": "Statistical measure of the dispersion of returns; often measured using standard deviation.",
+    "Earnings Per Share": "A company's net profit divided by the number of outstanding shares."
 }
