@@ -15,13 +15,14 @@ def is_cache_valid(filepath, max_age_hours=12):
     return datetime.now() - mod_time < timedelta(hours=max_age_hours)
 
 class Stock:
-    def __init__(self, ticker):
+    def __init__(self, ticker, period="1y"):
         self.ticker = ticker.upper()
+        self.period = period
         self._yf = yf.Ticker(self.ticker)
 
         # Core data
         self.info = self._yf.info
-        self.history = self._load_cached_history(period="1y")
+        self.history = self._load_cached_history(period=period)
         
         # Enrich the DataFrame with standard columns
         self.history["Daily Return"] = self.history["Close"].pct_change()
