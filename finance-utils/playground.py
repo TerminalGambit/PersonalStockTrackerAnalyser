@@ -22,6 +22,15 @@ nvda.plot_rsi()
 aapl.plot_moving_averages()
 nvda.plot_moving_averages()
 
+aapl.plot_atr()
+nvda.plot_atr()
+
+aapl.plot_obv()
+nvda.plot_obv()
+
+aapl.plot_stochastic()
+nvda.plot_stochastic()
+
 # Compare the two stocks visually
 aapl.compare_with(nvda)
 

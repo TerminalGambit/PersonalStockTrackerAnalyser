@@ -51,6 +51,23 @@ class Stock:
         self.history["Upper Band"] = self.history["20MA"] + 2 * self.history["20STD"]
         self.history["Lower Band"] = self.history["20MA"] - 2 * self.history["20STD"]
 
+        # ATR (Average True Range)
+        self.history["H-L"] = self.history["High"] - self.history["Low"]
+        self.history["H-PC"] = abs(self.history["High"] - self.history["Close"].shift(1))
+        self.history["L-PC"] = abs(self.history["Low"] - self.history["Close"].shift(1))
+        self.history["TR"] = self.history[["H-L", "H-PC", "L-PC"]].max(axis=1)
+        self.history["ATR"] = self.history["TR"].rolling(window=14).mean()
+
+        # OBV (On-Balance Volume)
+        direction = self.history["Close"].diff().apply(lambda x: 1 if x > 0 else (-1 if x < 0 else 0))
+        self.history["OBV"] = (direction * self.history["Volume"]).fillna(0).cumsum()
+
+        # Stochastic Oscillator
+        low_min = self.history["Low"].rolling(window=14).min()
+        high_max = self.history["High"].rolling(window=14).max()
+        self.history["%K"] = 100 * (self.history["Close"] - low_min) / (high_max - low_min)
+        self.history["%D"] = self.history["%K"].rolling(window=3).mean()
+
     def _load_cached_history(self, period="1y", refresh=False):
         cache_file = CACHE_DIR / f"{self.ticker}_{period}.csv"
 
@@ -170,6 +187,9 @@ class Stock:
         • .compare_indicators(other) → Compare growth and volatility with another stock
         • .is_bullish()              → Return True if price is above both MAs
         • .is_bearish()              → Return True if price is below both MAs
+        • .plot_atr()                → Plot Average True Range (ATR)
+        • .plot_obv()                → Plot On-Balance Volume (OBV)
+        • .plot_stochastic()         → Plot Stochastic Oscillator (%K and %D)
         • self.history               → Access enriched DataFrame
         • self.info                  → Access full Yahoo metadata
         """)
@@ -233,3 +253,42 @@ class Stock:
         """Simple heuristic: bearish if price is below both 50MA and 200MA."""
         latest = self.history.iloc[-1]
         return latest["Close"] < latest["50MA"] and latest["Close"] < latest["200MA"]
+
+    def plot_atr(self):
+        """Plot Average True Range (ATR) over time."""
+        df = self.history.copy()
+        plt.figure(figsize=(14, 6))
+        plt.plot(df["ATR"], label="ATR (14-day)", color="blue")
+        plt.title(f"{self.ticker} - Average True Range (ATR)")
+        plt.xlabel("Date")
+        plt.ylabel("ATR")
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
+    def plot_obv(self):
+        """Plot On-Balance Volume (OBV) over time."""
+        df = self.history.copy()
+        plt.figure(figsize=(14, 6))
+        plt.plot(df["OBV"], label="On-Balance Volume (OBV)", color="green")
+        plt.title(f"{self.ticker} - On-Balance Volume (OBV)")
+        plt.xlabel("Date")
+        plt.ylabel("OBV")
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
+    def plot_stochastic(self):
+        """Plot Stochastic Oscillator (%K and %D)."""
+        df = self.history.copy()
+        plt.figure(figsize=(14, 6))
+        plt.plot(df["%K"], label="%K", color="purple")
+        plt.plot(df["%D"], label="%D", color="orange")
+        plt.axhline(80, color="red", linestyle="--", label="Overbought (80)")
+        plt.axhline(20, color="green", linestyle="--", label="Oversold (20)")
+        plt.title(f"{self.ticker} - Stochastic Oscillator")
+        plt.xlabel("Date")
+        plt.ylabel("Value")
+        plt.legend()
+        plt.grid(True)
+        plt.show()

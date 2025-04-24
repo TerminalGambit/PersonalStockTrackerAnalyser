@@ -1,2 +1,3 @@
 		2.	Begin working on the LLM summary generator class?
-	3.	Add advanced indicators like ATR, OBV, or Stochastic?
+learn volatility screener
+comparison report
