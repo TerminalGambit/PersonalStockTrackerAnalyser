@@ -1,0 +1,46 @@
+{
+  "balance": 97322.15000152588,
+  "transaction_fee": 15,
+  "transactions": [
+    {
+      "type": "buy",
+      "ticker": "AAPL",
+      "shares": 10,
+      "price": 209.27999877929688,
+      "total_cost": 2107.7999877929688,
+      "timestamp": "2025-04-25T23:11:16.902461"
+    },
+    {
+      "type": "buy",
+      "ticker": "NVDA",
+      "shares": 5,
+      "price": 111.01000213623048,
+      "total_cost": 570.0500106811525,
+      "timestamp": "2025-04-25T23:11:17.195020"
+    }
+  ],
+  "holdings": {
+    "AAPL": {
+      "shares": 10,
+      "avg_price": 209.27999877929688,
+      "history": [
+        {
+          "shares": 10,
+          "price": 209.27999877929688,
+          "date": "2025-04-25T23:11:16.902447"
+        }
+      ]
+    },
+    "NVDA": {
+      "shares": 5,
+      "avg_price": 111.0100021362305,
+      "history": [
+        {
+          "shares": 5,
+          "price": 111.01000213623048,
+          "date": "2025-04-25T23:11:17.195001"
+        }
+      ]
+    }
+  }
+}
