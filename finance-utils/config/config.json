@@ -1,0 +1,7 @@
+{
+    "transaction_fee": 15,
+    "default_balance": 100000,
+    "report_dir": "Stock/latex_reports",
+    "data_dir": "Stock/data",
+    "default_period": "6mo"
+}

@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
-from finance_utils import Stock
-from finance_utils.portfolio_stock import PortfolioStock
+from ..Stock.finance_utils import Stock
+from portfolio_stock import PortfolioStock
 
 class Portfolio:
     def __init__(self, initial_balance=100_000, transaction_fee=15):
