@@ -1,4 +1,4 @@
-from finance_utils import Stock
+from stock import Stock
 
 # Create Stock instances
 print("Reloading AAPL and NVDA from cache if available...")
