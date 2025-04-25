@@ -4,6 +4,7 @@ from stock import Stock
 from portfolio_stock import PortfolioStock
 from transactions import Transactions
 
+
 class Portfolio:
     def __init__(self, initial_balance=100_000, transaction_fee=15):
         self.balance = initial_balance
@@ -23,11 +24,14 @@ class Portfolio:
         self.balance -= total_cost
         if ticker not in self.holdings:
             self.holdings[ticker] = PortfolioStock(ticker)
-        self.holdings[ticker].buy(shares, current_price, datetime.now().isoformat())
+        self.holdings[ticker].buy(
+            shares, current_price, datetime.now().isoformat())
 
-        self.transactions.record_buy(ticker, shares, current_price, self.transaction_fee)
+        self.transactions.record_buy(
+            ticker, shares, current_price, self.transaction_fee)
 
-        print(f"✅ Bought {shares} shares of {ticker} at {current_price:.2f}. Remaining balance: €{self.balance:.2f}")
+        print(
+            f"✅ Bought {shares} shares of {ticker} at {current_price:.2f}. Remaining balance: €{self.balance:.2f}")
         return True
 
     def sell(self, ticker, shares):
@@ -44,11 +48,14 @@ class Portfolio:
 
         total_revenue = shares * current_price - self.transaction_fee
         self.balance += total_revenue
-        self.holdings[ticker].sell(shares, current_price, datetime.now().isoformat())
+        self.holdings[ticker].sell(
+            shares, current_price, datetime.now().isoformat())
 
-        self.transactions.record_sell(ticker, shares, current_price, self.transaction_fee)
+        self.transactions.record_sell(
+            ticker, shares, current_price, self.transaction_fee)
 
-        print(f"✅ Sold {shares} shares of {ticker} at {current_price:.2f}. New balance: €{self.balance:.2f}")
+        print(
+            f"✅ Sold {shares} shares of {ticker} at {current_price:.2f}. New balance: €{self.balance:.2f}")
         return True
 
     def summary(self):

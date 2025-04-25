@@ -8,11 +8,13 @@ from datetime import datetime, timedelta
 CACHE_DIR = Path("./.stock_cache")
 CACHE_DIR.mkdir(exist_ok=True)
 
+
 def is_cache_valid(filepath, max_age_hours=12):
     if not filepath.exists():
         return False
     mod_time = datetime.fromtimestamp(filepath.stat().st_mtime)
     return datetime.now() - mod_time < timedelta(hours=max_age_hours)
+
 
 class Stock:
     def __init__(self, ticker, period="1y"):
@@ -23,18 +25,23 @@ class Stock:
         # Core data
         self.info = self._yf.info
         self.history = self._load_cached_history(period=period)
-        
+
         # Enrich the DataFrame with standard columns
         self.history["Daily Return"] = self.history["Close"].pct_change()
         self.history["50MA"] = self.history["Close"].rolling(window=50).mean()
-        self.history["200MA"] = self.history["Close"].rolling(window=200).mean()
+        self.history["200MA"] = self.history["Close"].rolling(
+            window=200).mean()
 
         # MACD components
-        self.history["EMA12"] = self.history["Close"].ewm(span=12, adjust=False).mean()
-        self.history["EMA26"] = self.history["Close"].ewm(span=26, adjust=False).mean()
+        self.history["EMA12"] = self.history["Close"].ewm(
+            span=12, adjust=False).mean()
+        self.history["EMA26"] = self.history["Close"].ewm(
+            span=26, adjust=False).mean()
         self.history["MACD"] = self.history["EMA12"] - self.history["EMA26"]
-        self.history["Signal"] = self.history["MACD"].ewm(span=9, adjust=False).mean()
-        self.history["Histogram"] = self.history["MACD"] - self.history["Signal"]
+        self.history["Signal"] = self.history["MACD"].ewm(
+            span=9, adjust=False).mean()
+        self.history["Histogram"] = self.history["MACD"] - \
+            self.history["Signal"]
 
         # RSI components
         delta = self.history["Close"].diff()
@@ -48,24 +55,31 @@ class Stock:
         # Bollinger Bands
         self.history["20MA"] = self.history["Close"].rolling(window=20).mean()
         self.history["20STD"] = self.history["Close"].rolling(window=20).std()
-        self.history["Upper Band"] = self.history["20MA"] + 2 * self.history["20STD"]
-        self.history["Lower Band"] = self.history["20MA"] - 2 * self.history["20STD"]
+        self.history["Upper Band"] = self.history["20MA"] + \
+            2 * self.history["20STD"]
+        self.history["Lower Band"] = self.history["20MA"] - \
+            2 * self.history["20STD"]
 
         # ATR (Average True Range)
         self.history["H-L"] = self.history["High"] - self.history["Low"]
-        self.history["H-PC"] = abs(self.history["High"] - self.history["Close"].shift(1))
-        self.history["L-PC"] = abs(self.history["Low"] - self.history["Close"].shift(1))
+        self.history["H-PC"] = abs(self.history["High"] -
+                                   self.history["Close"].shift(1))
+        self.history["L-PC"] = abs(self.history["Low"] -
+                                   self.history["Close"].shift(1))
         self.history["TR"] = self.history[["H-L", "H-PC", "L-PC"]].max(axis=1)
         self.history["ATR"] = self.history["TR"].rolling(window=14).mean()
 
         # OBV (On-Balance Volume)
-        direction = self.history["Close"].diff().apply(lambda x: 1 if x > 0 else (-1 if x < 0 else 0))
-        self.history["OBV"] = (direction * self.history["Volume"]).fillna(0).cumsum()
+        direction = self.history["Close"].diff().apply(
+            lambda x: 1 if x > 0 else (-1 if x < 0 else 0))
+        self.history["OBV"] = (
+            direction * self.history["Volume"]).fillna(0).cumsum()
 
         # Stochastic Oscillator
         low_min = self.history["Low"].rolling(window=14).min()
         high_max = self.history["High"].rolling(window=14).max()
-        self.history["%K"] = 100 * (self.history["Close"] - low_min) / (high_max - low_min)
+        self.history["%K"] = 100 * \
+            (self.history["Close"] - low_min) / (high_max - low_min)
         self.history["%D"] = self.history["%K"].rolling(window=3).mean()
 
     def _load_cached_history(self, period="1y", refresh=False):
@@ -87,15 +101,18 @@ class Stock:
         print(f"P/E Ratio: {self.info.get('trailingPE', 'N/A')}")
         print(f"Price: {self.info.get('currentPrice', 'N/A')} USD")
         print(f"Website: {self.info.get('website', 'N/A')}")
-    
+
     def plot_bollinger_bands(self):
         df = self.history.copy()
- 
+
         plt.figure(figsize=(14, 6))
         plt.plot(df["Close"], label="Close Price")
-        plt.plot(df["Upper Band"], label="Upper Band", linestyle="--", color="red")
-        plt.plot(df["Lower Band"], label="Lower Band", linestyle="--", color="green")
-        plt.fill_between(df.index, df["Lower Band"], df["Upper Band"], color="gray", alpha=0.1)
+        plt.plot(df["Upper Band"], label="Upper Band",
+                 linestyle="--", color="red")
+        plt.plot(df["Lower Band"], label="Lower Band",
+                 linestyle="--", color="green")
+        plt.fill_between(df.index, df["Lower Band"],
+                         df["Upper Band"], color="gray", alpha=0.1)
         plt.title(f"{self.ticker} - Bollinger Bands")
         plt.xlabel("Date")
         plt.ylabel("Price (USD)")
@@ -108,8 +125,10 @@ class Stock:
 
         plt.figure(figsize=(14, 6))
         plt.plot(df["MACD"], label="MACD", color="blue", linewidth=1.5)
-        plt.plot(df["Signal"], label="Signal Line", color="orange", linewidth=1.5)
-        plt.bar(df.index, df["Histogram"], label="Histogram", color="gray", alpha=0.5)
+        plt.plot(df["Signal"], label="Signal Line",
+                 color="orange", linewidth=1.5)
+        plt.bar(df.index, df["Histogram"],
+                label="Histogram", color="gray", alpha=0.5)
         plt.axhline(0, color="black", linewidth=1)
         plt.title(f"{self.ticker} - MACD Indicator")
         plt.xlabel("Date")
@@ -152,8 +171,10 @@ class Stock:
             return
 
         plt.figure(figsize=(14, 6))
-        plt.plot(self.history["Close"], label=f"{self.ticker} Close", linewidth=2)
-        plt.plot(other_stock.history["Close"], label=f"{other_stock.ticker} Close", linewidth=2)
+        plt.plot(self.history["Close"],
+                 label=f"{self.ticker} Close", linewidth=2)
+        plt.plot(other_stock.history["Close"],
+                 label=f"{other_stock.ticker} Close", linewidth=2)
         plt.title(f"Comparison: {self.ticker} vs {other_stock.ticker}")
         plt.xlabel("Date")
         plt.ylabel("Price (USD)")
@@ -229,11 +250,13 @@ class Stock:
         try:
             import mplfinance as mpf
         except ImportError:
-            print("Please install mplfinance with `pip install mplfinance` to use this method.")
+            print(
+                "Please install mplfinance with `pip install mplfinance` to use this method.")
             return
         df = self._yf.history(period="3mo")
         df = df[["Open", "High", "Low", "Close", "Volume"]]
-        mpf.plot(df, type="candle", volume=True, title=f"{self.ticker} Candlestick Chart")
+        mpf.plot(df, type="candle", volume=True,
+                 title=f"{self.ticker} Candlestick Chart")
 
     def compare_indicators(self, other_stock):
         if not isinstance(other_stock, Stock):
@@ -241,7 +264,8 @@ class Stock:
             return
 
         print(f"Comparing {self.ticker} and {other_stock.ticker}")
-        print(f"{self.ticker} Growth: {self.get_growth():.2f}% | Volatility: {self.volatility():.4f}")
+        print(
+            f"{self.ticker} Growth: {self.get_growth():.2f}% | Volatility: {self.volatility():.4f}")
         print(f"{other_stock.ticker} Growth: {other_stock.get_growth():.2f}% | Volatility: {other_stock.volatility():.4f}")
 
     def is_bullish(self):

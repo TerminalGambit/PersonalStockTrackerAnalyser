@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 
+
 class Transactions:
     def __init__(self):
         self.records = []

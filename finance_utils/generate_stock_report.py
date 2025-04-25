@@ -3,12 +3,13 @@ from finance_utils import Stock
 import matplotlib.pyplot as plt
 from datetime import datetime
 
+
 def generate_latex_report(ticker, period="1y"):
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     output_dir = f"latex_reports/{ticker}_{timestamp}"
     os.makedirs(output_dir, exist_ok=True)
     output_path = os.path.join(output_dir, "report.tex")
-    
+
     stock = Stock(ticker, period=period)
 
     today_data = stock.today()
@@ -39,7 +40,8 @@ def generate_latex_report(ticker, period="1y"):
     df = stock.history
 
     # Bollinger Bands plot
-    bb_fig_path = os.path.join(output_dir, f"bollinger_{ticker}_{timestamp}.png")
+    bb_fig_path = os.path.join(
+        output_dir, f"bollinger_{ticker}_{timestamp}.png")
     plt.figure(figsize=(10, 5))
     plt.plot(df["Close"], label="Close")
     plt.plot(df["Upper Band"], label="Upper Band", linestyle="--")
@@ -58,7 +60,8 @@ def generate_latex_report(ticker, period="1y"):
     plt.figure(figsize=(10, 4))
     plt.plot(df["MACD"], label="MACD", color="b")
     plt.plot(df["Signal"], label="Signal Line", color="orange")
-    plt.bar(df.index, df["Histogram"], label="Histogram", color="gray", alpha=0.3)
+    plt.bar(df.index, df["Histogram"],
+            label="Histogram", color="gray", alpha=0.3)
     plt.title(f"{ticker} MACD")
     plt.legend()
     plt.tight_layout()
@@ -147,7 +150,9 @@ def generate_latex_report(ticker, period="1y"):
         f.write(latex_content)
     print(f"LaTeX report generated at {output_path}")
 
-    os.system(f"pdflatex -interaction=nonstopmode -output-directory={output_dir} {output_path}")
+    os.system(
+        f"pdflatex -interaction=nonstopmode -output-directory={output_dir} {output_path}")
+
 
 if __name__ == "__main__":
     generate_latex_report("AAPL", period="1y")

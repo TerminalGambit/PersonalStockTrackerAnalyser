@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from stock import Stock
 
+
 class PortfolioVisualizer:
     def __init__(self, portfolio):
         self.portfolio = portfolio
@@ -10,7 +11,8 @@ class PortfolioVisualizer:
         """Plot portfolio total value over time."""
         total_values = []
         dates = pd.date_range(end=pd.Timestamp.today(), periods=180)
-        stock_data_cache = {ticker: Stock(ticker).history for ticker in self.portfolio.holdings.keys()}
+        stock_data_cache = {ticker: Stock(
+            ticker).history for ticker in self.portfolio.holdings.keys()}
 
         for date in dates:
             daily_value = self.portfolio.balance
@@ -34,7 +36,8 @@ class PortfolioVisualizer:
     def plot_individual_stock_values(self):
         """Plot individual stock values over time."""
         dates = pd.date_range(end=pd.Timestamp.today(), periods=180)
-        stock_data_cache = {ticker: Stock(ticker).history for ticker in self.portfolio.holdings.keys()}
+        stock_data_cache = {ticker: Stock(
+            ticker).history for ticker in self.portfolio.holdings.keys()}
 
         plt.figure(figsize=(12, 8))
         for ticker, stock in self.portfolio.holdings.items():
@@ -60,7 +63,8 @@ class PortfolioVisualizer:
         """Plot current portfolio allocation as a pie chart."""
         labels = []
         sizes = []
-        stock_price_cache = {ticker: Stock(ticker).history["Close"].iloc[-1] for ticker in self.portfolio.holdings.keys()}
+        stock_price_cache = {ticker: Stock(
+            ticker).history["Close"].iloc[-1] for ticker in self.portfolio.holdings.keys()}
 
         for ticker, stock in self.portfolio.holdings.items():
             latest_price = stock_price_cache[ticker]
