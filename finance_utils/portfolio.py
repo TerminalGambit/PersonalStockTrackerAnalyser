@@ -1,6 +1,6 @@
 import json
 from datetime import datetime
-from ..Stock.finance_utils import Stock
+from stock import Stock
 from portfolio_stock import PortfolioStock
 
 class Portfolio:
