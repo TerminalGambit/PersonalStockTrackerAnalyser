@@ -1,4 +1,5 @@
 from portfolio import Portfolio
+from visualise_portfolio import PortfolioVisualizer
 
 def run_portfolio_playground():
     print("📈 Running Portfolio Playground...\n")
@@ -15,6 +16,12 @@ def run_portfolio_playground():
 
     # Save the portfolio state
     portfolio.save_to_json("test_portfolio_output.json")
+
+    # Visualize the portfolio
+    visualizer = PortfolioVisualizer(portfolio)
+    visualizer.plot_portfolio_value()
+    visualizer.plot_individual_stock_values()
+    visualizer.plot_allocation_pie()
 
 if __name__ == "__main__":
     run_portfolio_playground()

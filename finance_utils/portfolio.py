@@ -2,13 +2,14 @@ import json
 from datetime import datetime
 from stock import Stock
 from portfolio_stock import PortfolioStock
+from transactions import Transactions
 
 class Portfolio:
     def __init__(self, initial_balance=100_000, transaction_fee=15):
         self.balance = initial_balance
         self.transaction_fee = transaction_fee
         self.holdings = {}
-        self.transactions = []
+        self.transactions = Transactions()
 
     def buy(self, ticker, shares):
         stock = Stock(ticker)
@@ -24,14 +25,7 @@ class Portfolio:
             self.holdings[ticker] = PortfolioStock(ticker)
         self.holdings[ticker].buy(shares, current_price, datetime.now().isoformat())
 
-        self.transactions.append({
-            "type": "buy",
-            "ticker": ticker,
-            "shares": shares,
-            "price": current_price,
-            "total_cost": total_cost,
-            "timestamp": datetime.now().isoformat()
-        })
+        self.transactions.record_buy(ticker, shares, current_price, self.transaction_fee)
 
         print(f"✅ Bought {shares} shares of {ticker} at {current_price:.2f}. Remaining balance: €{self.balance:.2f}")
         return True
@@ -52,14 +46,7 @@ class Portfolio:
         self.balance += total_revenue
         self.holdings[ticker].sell(shares, current_price, datetime.now().isoformat())
 
-        self.transactions.append({
-            "type": "sell",
-            "ticker": ticker,
-            "shares": shares,
-            "price": current_price,
-            "total_revenue": total_revenue,
-            "timestamp": datetime.now().isoformat()
-        })
+        self.transactions.record_sell(ticker, shares, current_price, self.transaction_fee)
 
         print(f"✅ Sold {shares} shares of {ticker} at {current_price:.2f}. New balance: €{self.balance:.2f}")
         return True
@@ -76,7 +63,7 @@ class Portfolio:
         data = {
             "balance": self.balance,
             "transaction_fee": self.transaction_fee,
-            "transactions": self.transactions,
+            "transactions": self.transactions.records,
             "holdings": {
                 ticker: {
                     "shares": stock.total_shares,
