@@ -1,5 +1,5 @@
 import os
-from finance_utils import Stock
+from stock import Stock
 import matplotlib.pyplot as plt
 from datetime import datetime
 
