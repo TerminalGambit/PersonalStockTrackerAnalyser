@@ -1,44 +1,44 @@
 {
-  "balance": 97322.15000152588,
+  "balance": 4655.599899291992,
   "transaction_fee": 15,
   "transactions": [
     {
       "type": "buy",
       "ticker": "AAPL",
-      "shares": 10,
-      "price": 209.27999877929688,
+      "shares": 20,
+      "price": 211.2100067138672,
       "transaction_fee": 15,
-      "timestamp": "2025-04-25T23:32:07.053629"
+      "timestamp": "2024-01-01T10:00:00"
     },
     {
       "type": "buy",
       "ticker": "NVDA",
-      "shares": 5,
-      "price": 111.01000213623048,
+      "shares": 10,
+      "price": 109.0199966430664,
       "transaction_fee": 15,
-      "timestamp": "2025-04-25T23:32:07.342240"
+      "timestamp": "2024-01-01T14:30:00"
     }
   ],
   "holdings": {
     "AAPL": {
-      "shares": 10,
-      "avg_price": 209.27999877929688,
+      "shares": 20,
+      "avg_price": 211.2100067138672,
       "history": [
         {
-          "shares": 10,
-          "price": 209.27999877929688,
-          "date": "2025-04-25T23:32:07.053615"
+          "shares": 20,
+          "price": 211.2100067138672,
+          "date": "2024-01-01T10:00:00"
         }
       ]
     },
     "NVDA": {
-      "shares": 5,
-      "avg_price": 111.0100021362305,
+      "shares": 10,
+      "avg_price": 109.0199966430664,
       "history": [
         {
-          "shares": 5,
-          "price": 111.01000213623048,
-          "date": "2025-04-25T23:32:07.342223"
+          "shares": 10,
+          "price": 109.0199966430664,
+          "date": "2024-01-01T14:30:00"
         }
       ]
     }

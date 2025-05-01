@@ -10,18 +10,35 @@ class PortfolioVisualizer:
     def plot_portfolio_value(self):
         """Plot portfolio total value over time."""
         total_values = []
-        dates = pd.date_range(end=pd.Timestamp.today(), periods=180)
-        stock_data_cache = {ticker: Stock(
-            ticker).history for ticker in self.portfolio.holdings.keys()}
+        # Determine the earliest transaction date
+        if not self.portfolio.transactions.records:
+            print("⚠️ No transactions found. Cannot plot portfolio value.")
+            return
+        earliest_date = min(
+            pd.to_datetime(tx["timestamp"]).tz_localize("UTC") if pd.to_datetime(tx["timestamp"]).tzinfo is None else pd.to_datetime(tx["timestamp"])
+            for tx in self.portfolio.transactions.records
+        )
+        if earliest_date.tzinfo is None:
+            earliest_date = earliest_date.tz_localize("UTC")
+        dates = pd.date_range(start=earliest_date, end=pd.Timestamp.now(tz="UTC"))
+        stock_data_cache = {}
+        for ticker in self.portfolio.holdings.keys():
+            stock_data = Stock(ticker).history
+            stock_data.index = pd.to_datetime(stock_data.index, utc=True)
+            stock_data_cache[ticker] = stock_data
 
         for date in dates:
-            daily_value = self.portfolio.balance
+            date = pd.to_datetime(date).tz_localize("UTC") if date.tzinfo is None else date
+            daily_value = 0
             for ticker, stock in self.portfolio.holdings.items():
                 stock_data = stock_data_cache[ticker]
-                if date.strftime('%Y-%m-%d') in stock_data.index:
-                    price = stock_data.loc[date.strftime('%Y-%m-%d'), 'Close']
+                # Skip if no shares bought yet or no data for this date
+                available_dates = stock_data.index[stock_data.index <= date]
+                if not available_dates.empty:
+                    last_available_date = available_dates[-1]
+                    price = stock_data.loc[last_available_date, 'Close']
                     daily_value += stock.total_shares * price
-            total_values.append(daily_value)
+            total_values.append(daily_value + self.portfolio.balance)
 
         plt.figure(figsize=(10, 6))
         plt.plot(dates, total_values, label="Portfolio Value")
@@ -35,17 +52,33 @@ class PortfolioVisualizer:
 
     def plot_individual_stock_values(self):
         """Plot individual stock values over time."""
-        dates = pd.date_range(end=pd.Timestamp.today(), periods=180)
-        stock_data_cache = {ticker: Stock(
-            ticker).history for ticker in self.portfolio.holdings.keys()}
+        # Determine the earliest transaction date
+        if not self.portfolio.transactions.records:
+            print("⚠️ No transactions found. Cannot plot individual stock values.")
+            return
+        earliest_date = min(
+            pd.to_datetime(tx["timestamp"]).tz_localize("UTC") if pd.to_datetime(tx["timestamp"]).tzinfo is None else pd.to_datetime(tx["timestamp"])
+            for tx in self.portfolio.transactions.records
+        )
+        if earliest_date.tzinfo is None:
+            earliest_date = earliest_date.tz_localize("UTC")
+        dates = pd.date_range(start=earliest_date, end=pd.Timestamp.now(tz="UTC"))
+        stock_data_cache = {}
+        for ticker in self.portfolio.holdings.keys():
+            stock_data = Stock(ticker).history
+            stock_data.index = pd.to_datetime(stock_data.index, utc=True)
+            stock_data_cache[ticker] = stock_data
 
         plt.figure(figsize=(12, 8))
         for ticker, stock in self.portfolio.holdings.items():
             prices = []
             stock_data = stock_data_cache[ticker]
             for date in dates:
-                if date.strftime('%Y-%m-%d') in stock_data.index:
-                    price = stock_data.loc[date.strftime('%Y-%m-%d'), 'Close']
+                date = pd.to_datetime(date).tz_localize("UTC") if date.tzinfo is None else date
+                available_dates = stock_data.index[stock_data.index <= date]
+                if not available_dates.empty:
+                    last_available_date = available_dates[-1]
+                    price = stock_data.loc[last_available_date, 'Close']
                     prices.append(price * stock.total_shares)
                 else:
                     prices.append(None)

@@ -6,14 +6,14 @@ class Transactions:
     def __init__(self):
         self.records = []
 
-    def record_buy(self, ticker, shares, price, transaction_fee):
+    def record_buy(self, ticker, shares, price, transaction_fee, timestamp=None):
         self.records.append({
             "type": "buy",
             "ticker": ticker,
             "shares": shares,
             "price": price,
             "transaction_fee": transaction_fee,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": timestamp or datetime.now().isoformat()
         })
 
     def record_sell(self, ticker, shares, price, transaction_fee):

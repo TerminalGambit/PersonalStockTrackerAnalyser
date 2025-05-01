@@ -12,7 +12,7 @@ class Portfolio:
         self.holdings = {}
         self.transactions = Transactions()
 
-    def buy(self, ticker, shares):
+    def buy(self, ticker, shares, date=None):
         stock = Stock(ticker)
         current_price = stock.history["Close"].iloc[-1]
         total_cost = shares * current_price + self.transaction_fee
@@ -24,11 +24,12 @@ class Portfolio:
         self.balance -= total_cost
         if ticker not in self.holdings:
             self.holdings[ticker] = PortfolioStock(ticker)
+        buy_date = date or datetime.now().isoformat()
         self.holdings[ticker].buy(
-            shares, current_price, datetime.now().isoformat())
+            shares, current_price, buy_date)
 
         self.transactions.record_buy(
-            ticker, shares, current_price, self.transaction_fee)
+            ticker, shares, current_price, self.transaction_fee, buy_date)
 
         print(
             f"✅ Bought {shares} shares of {ticker} at {current_price:.2f}. Remaining balance: €{self.balance:.2f}")
@@ -82,3 +83,31 @@ class Portfolio:
         with open(filepath, 'w') as f:
             json.dump(data, f, indent=2)
         print(f"💾 Portfolio saved to {filepath}")
+
+    @classmethod
+    def load_from_json(cls, filepath='portfolio.json'):
+        try:
+            with open(filepath, 'r') as f:
+                data = json.load(f)
+                if not data or "balance" not in data:
+                    raise ValueError("Invalid or empty portfolio data.")
+        except (json.JSONDecodeError, FileNotFoundError, ValueError) as e:
+            print(f"⚠️ Failed to load portfolio: {e}. Starting a new one.")
+            return cls()
+
+        portfolio = cls(
+            initial_balance=data["balance"],
+            transaction_fee=data["transaction_fee"]
+        )
+
+        for tx in data.get("transactions", []):
+            portfolio.transactions.records.append(tx)
+
+        for ticker, stock_data in data.get("holdings", {}).items():
+            ps = PortfolioStock(ticker)
+            ps.total_shares = stock_data["shares"]
+            ps.total_cost = stock_data["shares"] * stock_data["avg_price"]
+            ps.history = stock_data["history"]
+            portfolio.holdings[ticker] = ps
+
+        return portfolio
