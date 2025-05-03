@@ -213,6 +213,9 @@ class Stock:
         • .plot_stochastic()         → Plot Stochastic Oscillator (%K and %D)
         • self.history               → Access enriched DataFrame
         • self.info                  → Access full Yahoo metadata
+        • .get_rsi()                  → Return RSI Series
+        • .get_macd()                 → Return MACD Series
+        • .get_bollinger_bands()     → Return (Upper, Lower) Bollinger Bands
         """)
 
     def today(self):
@@ -316,3 +319,15 @@ class Stock:
         plt.legend()
         plt.grid(True)
         plt.show()
+
+    def get_rsi(self):
+        """Return RSI series."""
+        return self.history["RSI"]
+
+    def get_macd(self):
+        """Return MACD series."""
+        return self.history["MACD"]
+
+    def get_bollinger_bands(self):
+        """Return (Upper Band, Lower Band) as a tuple of Series."""
+        return self.history["Upper Band"], self.history["Lower Band"]
