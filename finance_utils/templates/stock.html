@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-chart-line me-2"></i>{{ symbol }} Stock Analysis</h1>
+            <div>
+                <button class="btn btn-secondary" onclick="window.history.back()">
+                    <i class="fas fa-arrow-left me-2"></i>Back
+                </button>
+                <button class="btn btn-primary" onclick="refreshData()">
+                    <i class="fas fa-sync-alt me-2"></i>Refresh
+                </button>
+            </div>
+        </div>
+        <div class="alert alert-info">
+            <strong>Data Status:</strong> Last updated {{ summary.last_updated }} ({{ summary.days_behind }} days behind)
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card metric-card">
+            <div class="card-body text-center">
+                <h2 class="metric-value">${{ summary.current_price }}</h2>
+                <div class="metric-label">Current Price</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h2 class="metric-value {{ 'bullish' if summary.is_bullish else ('bearish' if summary.is_bearish else 'neutral') }}">
+                    <i class="fas {{ 'fa-arrow-up' if summary.is_bullish else ('fa-arrow-down' if summary.is_bearish else 'fa-minus') }}"></i>
+                </h2>
+                <div class="metric-label"><strong>{{ 'Bullish' if summary.is_bullish else ('Bearish' if summary.is_bearish else 'Neutral') }}</strong></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-12 mb-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h4 class="metric-value">{{ summary.volatility }}</h4>
+                <div class="metric-label">Volatility</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-chart-bar me-2"></i>Key Performance Metrics</h5>
+                <table class="table table-sm">
+                    <tr><td>High:</td><td><strong>${{ summary.high }}</strong></td></tr>
+                    <tr><td>Low:</td><td><strong>${{ summary.low }}</strong></td></tr>
+                    <tr><td>Volume:</td><td><strong>{{ "{:,}".format(summary.volume) }}</strong></td></tr>
+                    <tr><td>Growth:</td><td><strong>{{ summary.growth_percent }}%</strong></td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-chart-line me-2"></i>Technical Analysis</h5>
+                <table class="table table-sm">
+                    <tr><td>RSI:</td><td><strong>{{ summary.rsi }}</strong></td></tr>
+                    <tr><td>MACD:</td><td><strong>{{ summary.macd }}</strong></td></tr>
+                    <tr><td>50-Day MA:</td><td><strong>${{ summary.ma_50 }}</strong></td></tr>
+                    <tr><td>200-Day MA:</td><td><strong>${{ summary.ma_200 }}</strong></td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-candlestick-chart me-2"></i>Price Movements</h5>
+            </div>
+            <div class="card-body">
+                <div id="candlestickChart"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-area me-2"></i>Technical Indicators</h5>
+            </div>
+            <div class="card-body">
+                <div id="technicalChart"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Plotly charts
+        {% if candlestick_chart %}
+        var candlestickChart = document.getElementById('candlestickChart');
+        var candlestickData = {{ candlestick_chart | safe }};
+        Plotly.newPlot(candlestickChart, candlestickData.data, candlestickData.layout);
+        {% endif %}
+        
+        {% if technical_chart %}
+        var technicalChart = document.getElementById('technicalChart');
+        var technicalData = {{ technical_chart | safe }};
+        Plotly.newPlot(technicalChart, technicalData.data, technicalData.layout);
+        {% endif %}
+    });
+    
+    function refreshData() {
+        showInfo('Refreshing data...');
+        location.reload();
+    }
+    
+    function showInfo(message) {
+        const toast = $(`
+            <div class="toast align-items-center text-white bg-info border-0" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+                <div class="d-flex">
+                    <div class="toast-body">${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        `);
+        
+        $('body').append(toast);
+        toast.toast('show');
+        setTimeout(() => toast.remove(), 3000);
+    }
+</script>
+{% endblock %}

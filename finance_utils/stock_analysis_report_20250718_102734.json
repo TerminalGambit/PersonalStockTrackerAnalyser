@@ -1,0 +1,107 @@
+{
+  "generated_at": "2025-07-18T10:27:27.997561",
+  "stocks": {
+    "AAPL": {
+      "freshness": {
+        "last_date": "2025-05-02",
+        "days_behind": 77,
+        "is_fresh": false,
+        "status": "\u274c Stale",
+        "data_points": 250
+      },
+      "valid": true,
+      "basic_info": {
+        "symbol": "AAPL",
+        "current_price": 205.3500061035156,
+        "volume": 100912500,
+        "high": 206.9900054931641,
+        "low": 202.16000366210935
+      },
+      "technical_analysis": {
+        "rsi": 57.61422630385511,
+        "macd": -0.7230950368896742,
+        "ma_50": 215.5896011352539,
+        "ma_200": 226.7863339996338,
+        "upper_band": 221.19150416213526,
+        "lower_band": 178.13449986618505,
+        "atr": 6.983571733747206
+      },
+      "performance": {
+        "period_start": "2024-05-03",
+        "period_end": "2025-05-02",
+        "growth_percent": 12.509338284323906,
+        "volatility": 0.02034235638778972,
+        "max_price": 258.7355041503906,
+        "min_price": 172.4199981689453
+      },
+      "signals": {
+        "is_bullish": "False",
+        "is_bearish": "True",
+        "price_above_ma50": "False",
+        "price_above_ma200": "False",
+        "rsi_overbought": "False",
+        "rsi_oversold": "False"
+      }
+    },
+    "NVDA": {
+      "freshness": {
+        "last_date": "2025-04-29",
+        "days_behind": 80,
+        "is_fresh": false,
+        "status": "\u274c Stale",
+        "data_points": 250
+      },
+      "valid": true,
+      "basic_info": {
+        "symbol": "NVDA",
+        "current_price": 109.0199966430664,
+        "volume": 169328600,
+        "high": 110.1999969482422,
+        "low": 107.44000244140624
+      },
+      "technical_analysis": {
+        "rsi": 60.28793011462977,
+        "macd": -1.837748680161198,
+        "ma_50": 114.11357147216796,
+        "ma_200": 125.32781028747559,
+        "upper_band": 117.53272993629021,
+        "lower_band": 93.07127015526252,
+        "atr": 6.829284667968753
+      },
+      "performance": {
+        "period_start": "2024-04-30",
+        "period_end": "2025-04-29",
+        "growth_percent": 26.219090741825728,
+        "volatility": 0.0377651461203814,
+        "max_price": 149.41624450683594,
+        "min_price": 83.01371765136719
+      },
+      "signals": {
+        "is_bullish": "False",
+        "is_bearish": "True",
+        "price_above_ma50": "False",
+        "price_above_ma200": "False",
+        "rsi_overbought": "False",
+        "rsi_oversold": "False"
+      }
+    },
+    "GOOGL": {
+      "error": "No data available",
+      "valid": false
+    },
+    "MSFT": {
+      "error": "No data available",
+      "valid": false
+    },
+    "TSLA": {
+      "error": "No data available",
+      "valid": false
+    }
+  },
+  "summary": {
+    "total_stocks": 2,
+    "fresh_data": 0,
+    "stale_data": 2,
+    "no_data": 3
+  }
+}

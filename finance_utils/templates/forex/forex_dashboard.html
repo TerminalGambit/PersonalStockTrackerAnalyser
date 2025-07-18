@@ -1,0 +1,581 @@
+{% extends "base.html" %}
+
+{% block title %}Forex Trading Dashboard{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header fade-in-up">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-4"><i class="fas fa-exchange-alt me-3"></i>Forex Trading Hub</h1>
+                <p class="lead">Professional forex analysis with real-time rates and market insights</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end">
+                    <button class="btn btn-primary" onclick="refreshForexData()">
+                        <i class="fas fa-sync-alt me-2"></i>Refresh Rates
+                    </button>
+                    <button class="btn btn-success" onclick="generateForexReport()">
+                        <i class="fas fa-file-alt me-2"></i>Generate Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Forex Market Overview -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-globe me-2"></i>Forex Market Overview</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="metric-card">
+                            <div class="card-body text-center">
+                                <h3 class="metric-value" id="market-status">Open</h3>
+                                <div class="metric-label">Market Status</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="metric-card">
+                            <div class="card-body text-center">
+                                <h3 class="metric-value" id="active-pairs">28</h3>
+                                <div class="metric-label">Active Pairs</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="metric-card">
+                            <div class="card-body text-center">
+                                <h3 class="metric-value" id="volatility-index">2.34%</h3>
+                                <div class="metric-label">Avg Volatility</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="metric-card">
+                            <div class="card-body text-center">
+                                <h3 class="metric-value" id="trend-strength">Strong</h3>
+                                <div class="metric-label">Market Trend</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Currency Pair Analysis -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-search me-2"></i>Analyze Currency Pair</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <select class="form-select" id="base-currency">
+                            <option value="EUR">EUR</option>
+                            <option value="USD">USD</option>
+                            <option value="GBP">GBP</option>
+                            <option value="JPY">JPY</option>
+                            <option value="CHF">CHF</option>
+                            <option value="AUD">AUD</option>
+                            <option value="CAD">CAD</option>
+                            <option value="NZD">NZD</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1 text-center">
+                        <span class="fs-3">/</span>
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-select" id="quote-currency">
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                            <option value="JPY">JPY</option>
+                            <option value="CHF">CHF</option>
+                            <option value="AUD">AUD</option>
+                            <option value="CAD">CAD</option>
+                            <option value="NZD">NZD</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-primary w-100" onclick="analyzeForexPair()">
+                            <i class="fas fa-chart-line me-2"></i>Analyze
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-clock me-2"></i>Trading Sessions</h5>
+            </div>
+            <div class="card-body">
+                <div id="trading-sessions">
+                    <!-- Trading sessions will be populated here -->
+                    <div class="row text-center">
+                        <div class="col-3">
+                            <div class="session-indicator" id="sydney-session">
+                                <div class="session-dot"></div>
+                                <small>Sydney</small>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="session-indicator" id="tokyo-session">
+                                <div class="session-dot"></div>
+                                <small>Tokyo</small>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="session-indicator" id="london-session">
+                                <div class="session-dot"></div>
+                                <small>London</small>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="session-indicator" id="newyork-session">
+                                <div class="session-dot"></div>
+                                <small>New York</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Major Currency Pairs Grid -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>Major Currency Pairs</h5>
+                    <div class="btn-group" role="group">
+                        <input type="radio" class="btn-check" name="pair-category" id="major-pairs" autocomplete="off" checked>
+                        <label class="btn btn-outline-primary btn-sm" for="major-pairs">Major</label>
+                        
+                        <input type="radio" class="btn-check" name="pair-category" id="minor-pairs" autocomplete="off">
+                        <label class="btn btn-outline-secondary btn-sm" for="minor-pairs">Minor</label>
+                        
+                        <input type="radio" class="btn-check" name="pair-category" id="exotic-pairs" autocomplete="off">
+                        <label class="btn btn-outline-warning btn-sm" for="exotic-pairs">Exotic</label>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="forex-pairs-loading" class="loading">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p class="mt-2">Loading forex pairs...</p>
+                </div>
+                <div id="forex-pairs-grid" class="forex-pairs-grid" style="display: none;">
+                    <!-- Forex pairs will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Forex Pair Quick View Modal -->
+<div class="modal fade" id="forexPairModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="forexPairModalTitle">Forex Pair Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="forexPairModalBody">
+                <!-- Forex pair details will be populated here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="viewFullForexAnalysis()">
+                    <i class="fas fa-external-link-alt me-2"></i>Full Analysis
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentForexPair = null;
+
+// Load forex dashboard data on page load
+$(document).ready(function() {
+    loadForexPairs();
+    updateTradingSessions();
+    updateMarketOverview();
+    
+    // Update data every 30 seconds
+    setInterval(function() {
+        updateMarketOverview();
+        updateTradingSessions();
+    }, 30000);
+});
+
+function loadForexPairs() {
+    $('#forex-pairs-loading').show();
+    $('#forex-pairs-grid').hide();
+    
+    // Get selected category
+    const category = $('input[name="pair-category"]:checked').attr('id').replace('-pairs', '');
+    
+    $.ajax({
+        url: '/api/forex/pairs',
+        method: 'GET',
+        data: { category: category },
+        success: function(data) {
+            displayForexPairs(data);
+        },
+        error: function(xhr, status, error) {
+            console.error('Error loading forex pairs:', error);
+            showError('Failed to load forex pairs data');
+        }
+    });
+}
+
+function displayForexPairs(pairs) {
+    const grid = $('#forex-pairs-grid');
+    grid.empty();
+    
+    if (pairs.length === 0) {
+        grid.html('<div class="alert alert-warning">No forex pairs available. Try refreshing the data.</div>');
+        grid.show();
+        $('#forex-pairs-loading').hide();
+        return;
+    }
+    
+    pairs.forEach(pair => {
+        const card = createForexPairCard(pair);
+        grid.append(card);
+    });
+    
+    grid.show();
+    $('#forex-pairs-loading').hide();
+}
+
+function createForexPairCard(pair) {
+    const trendClass = pair.trend === 'bullish' ? 'bullish' : (pair.trend === 'bearish' ? 'bearish' : 'neutral');
+    const trendIcon = pair.trend === 'bullish' ? 'fa-arrow-up' : (pair.trend === 'bearish' ? 'fa-arrow-down' : 'fa-minus');
+    const trendText = pair.trend === 'bullish' ? 'Bullish' : (pair.trend === 'bearish' ? 'Bearish' : 'Neutral');
+    
+    const spreadClass = pair.spread <= 2 ? 'text-success' : (pair.spread <= 5 ? 'text-warning' : 'text-danger');
+    
+    return `
+        <div class="card h-100 forex-pair-card" style="cursor: pointer;" onclick="showForexPairModal('${pair.symbol}')">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="card-title mb-0">${pair.symbol}</h5>
+                    <div class="text-end">
+                        <span class="badge status-badge ${pair.session_active ? 'data-fresh' : 'data-stale'}">
+                            ${pair.session_active ? 'Active' : 'Inactive'}
+                        </span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <div class="metric-value">${pair.rate}</div>
+                        <div class="metric-label">Current Rate</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="metric-value ${trendClass}">
+                            <i class="fas ${trendIcon}"></i>
+                        </div>
+                        <div class="metric-label">${trendText}</div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-6">
+                        <small class="text-muted">Change: <strong class="${trendClass}">${pair.change}%</strong></small>
+                    </div>
+                    <div class="col-6">
+                        <small class="${spreadClass}">Spread: <strong>${pair.spread} pips</strong></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function showForexPairModal(symbol) {
+    currentForexPair = symbol;
+    $('#forexPairModalTitle').text(`${symbol} - Forex Pair Details`);
+    $('#forexPairModalBody').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>');
+    $('#forexPairModal').modal('show');
+    
+    $.ajax({
+        url: `/api/forex/pair/${symbol}`,
+        method: 'GET',
+        success: function(data) {
+            displayForexPairDetails(data);
+        },
+        error: function(xhr, status, error) {
+            $('#forexPairModalBody').html('<div class="alert alert-danger">Failed to load forex pair details</div>');
+        }
+    });
+}
+
+function displayForexPairDetails(pair) {
+    const trendClass = pair.trend === 'bullish' ? 'bullish' : (pair.trend === 'bearish' ? 'bearish' : 'neutral');
+    const trendIcon = pair.trend === 'bullish' ? 'fa-arrow-up' : (pair.trend === 'bearish' ? 'fa-arrow-down' : 'fa-minus');
+    const trendText = pair.trend === 'bullish' ? 'Bullish' : (pair.trend === 'bearish' ? 'Bearish' : 'Neutral');
+    
+    const html = `
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card metric-card">
+                    <div class="card-body text-center">
+                        <h2 class="metric-value">${pair.rate}</h2>
+                        <div class="metric-label">Current Rate</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h2 class="metric-value ${trendClass}">
+                            <i class="fas ${trendIcon}"></i>
+                        </h2>
+                        <div class="metric-label">${trendText}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h6>Trading Info</h6>
+                        <p class="mb-1">Bid: <strong>${pair.bid}</strong></p>
+                        <p class="mb-1">Ask: <strong>${pair.ask}</strong></p>
+                        <p class="mb-0">Spread: <strong>${pair.spread} pips</strong></p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h6>Performance</h6>
+                        <p class="mb-1">Change: <strong class="${trendClass}">${pair.change}%</strong></p>
+                        <p class="mb-1">Volatility: <strong>${pair.volatility}%</strong></p>
+                        <p class="mb-0">Volume: <strong>${pair.volume}</strong></p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h6>Session Info</h6>
+                        <p class="mb-1">Status: <strong>${pair.session_active ? 'Active' : 'Inactive'}</strong></p>
+                        <p class="mb-1">Peak Hours: <strong>${pair.peak_hours}</strong></p>
+                        <p class="mb-0">Last Update: <strong>${pair.last_updated}</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    $('#forexPairModalBody').html(html);
+}
+
+function viewFullForexAnalysis() {
+    if (currentForexPair) {
+        window.open(`/forex/pair/${currentForexPair}`, '_blank');
+    }
+}
+
+function analyzeForexPair() {
+    const baseCurrency = $('#base-currency').val();
+    const quoteCurrency = $('#quote-currency').val();
+    
+    if (baseCurrency === quoteCurrency) {
+        showError('Please select different currencies');
+        return;
+    }
+    
+    const pairSymbol = `${baseCurrency}${quoteCurrency}`;
+    window.open(`/forex/pair/${pairSymbol}`, '_blank');
+}
+
+function updateTradingSessions() {
+    $.ajax({
+        url: '/api/forex/sessions',
+        method: 'GET',
+        success: function(data) {
+            updateSessionIndicators(data);
+        },
+        error: function(xhr, status, error) {
+            console.error('Error updating trading sessions:', error);
+        }
+    });
+}
+
+function updateSessionIndicators(sessions) {
+    const sessionElements = {
+        'Sydney': $('#sydney-session'),
+        'Tokyo': $('#tokyo-session'),
+        'London': $('#london-session'),
+        'New York': $('#newyork-session')
+    };
+    
+    Object.keys(sessionElements).forEach(sessionName => {
+        const element = sessionElements[sessionName];
+        const dot = element.find('.session-dot');
+        
+        if (sessions[sessionName] && sessions[sessionName].active) {
+            dot.addClass('active');
+            element.attr('title', `${sessionName} session is active`);
+        } else {
+            dot.removeClass('active');
+            element.attr('title', `${sessionName} session is closed`);
+        }
+    });
+}
+
+function updateMarketOverview() {
+    $.ajax({
+        url: '/api/forex/overview',
+        method: 'GET',
+        success: function(data) {
+            $('#market-status').text(data.market_status);
+            $('#active-pairs').text(data.active_pairs);
+            $('#volatility-index').text(data.volatility_index + '%');
+            $('#trend-strength').text(data.trend_strength);
+        },
+        error: function(xhr, status, error) {
+            console.error('Error updating market overview:', error);
+        }
+    });
+}
+
+function refreshForexData() {
+    showInfo('Refreshing forex data...');
+    loadForexPairs();
+    updateTradingSessions();
+    updateMarketOverview();
+}
+
+function generateForexReport() {
+    window.open('/forex/reports', '_blank');
+}
+
+// Category filter change handler
+$('input[name="pair-category"]').change(function() {
+    loadForexPairs();
+});
+
+function showError(message) {
+    const toast = $(`
+        <div class="toast align-items-center text-white bg-danger border-0" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `);
+    
+    $('body').append(toast);
+    toast.toast('show');
+    setTimeout(() => toast.remove(), 5000);
+}
+
+function showInfo(message) {
+    const toast = $(`
+        <div class="toast align-items-center text-white bg-info border-0" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `);
+    
+    $('body').append(toast);
+    toast.toast('show');
+    setTimeout(() => toast.remove(), 3000);
+}
+</script>
+
+<!-- Additional CSS for forex-specific styling -->
+<style>
+.forex-pairs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.forex-pair-card {
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-color);
+    position: relative;
+    overflow: hidden;
+}
+
+.forex-pair-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--success-color);
+}
+
+.forex-pair-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--success-color) 0%, #059669 100%);
+}
+
+.session-indicator {
+    position: relative;
+    padding: 0.5rem;
+}
+
+.session-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #6c757d;
+    margin: 0 auto 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.session-dot.active {
+    background: var(--success-color);
+    box-shadow: 0 0 10px var(--success-color);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+</style>
+{% endblock %}

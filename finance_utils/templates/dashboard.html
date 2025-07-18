@@ -1,0 +1,351 @@
+{% extends "base.html" %}
+
+{% block title %}Stock Analysis Dashboard{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header fade-in-up">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-4"><i class="fas fa-chart-line me-3"></i>Financial Analytics Hub</h1>
+                <p class="lead">Comprehensive stock, forex, and cryptocurrency analysis platform</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end">
+                    <button class="btn btn-primary" onclick="refreshAllData()">
+                        <i class="fas fa-sync-alt me-2"></i>Refresh Data
+                    </button>
+                    <button class="btn btn-success" onclick="generateReport()">
+                        <i class="fas fa-file-alt me-2"></i>Generate Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-search me-2"></i>Analyze Stock
+                </h5>
+                <div class="input-group">
+                    <input type="text" id="stockSymbol" class="form-control" placeholder="Enter stock symbol (e.g., AAPL)">
+                    <button class="btn btn-primary" onclick="analyzeStock()">
+                        <i class="fas fa-chart-bar me-2"></i>Analyze
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-info-circle me-2"></i>System Status
+                </h5>
+                <p class="mb-1">
+                    <strong>Data Source:</strong> Yahoo Finance API
+                </p>
+                <p class="mb-1">
+                    <strong>Cache Status:</strong> <span id="cacheStatus" class="badge bg-secondary">Loading...</span>
+                </p>
+                <p class="mb-0">
+                    <strong>Last Updated:</strong> <span id="lastUpdated">Loading...</span>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>Available Stocks
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="stocksLoading" class="loading">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p class="mt-2">Loading stock data...</p>
+                </div>
+                <div id="stocksGrid" class="stock-grid" style="display: none;">
+                    <!-- Stock cards will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stock Quick View Modal -->
+<div class="modal fade" id="stockModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="stockModalTitle">Stock Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="stockModalBody">
+                <!-- Stock details will be populated here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="viewFullAnalysis()">
+                    <i class="fas fa-external-link-alt me-2"></i>Full Analysis
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentStock = null;
+
+// Load dashboard data on page load
+$(document).ready(function() {
+    loadStocks();
+    updateSystemStatus();
+});
+
+function loadStocks() {
+    $('#stocksLoading').show();
+    $('#stocksGrid').hide();
+    
+    $.ajax({
+        url: '/api/stocks',
+        method: 'GET',
+        success: function(data) {
+            displayStocks(data);
+            updateCacheStatus(data);
+        },
+        error: function(xhr, status, error) {
+            console.error('Error loading stocks:', error);
+            showError('Failed to load stock data');
+        }
+    });
+}
+
+function displayStocks(stocks) {
+    const grid = $('#stocksGrid');
+    grid.empty();
+    
+    if (stocks.length === 0) {
+        grid.html('<div class="alert alert-warning">No stock data available. Try refreshing the data.</div>');
+        grid.show();
+        $('#stocksLoading').hide();
+        return;
+    }
+    
+    stocks.forEach(stock => {
+        const card = createStockCard(stock);
+        grid.append(card);
+    });
+    
+    grid.show();
+    $('#stocksLoading').hide();
+}
+
+function createStockCard(stock) {
+    const trendClass = stock.is_bullish ? 'bullish' : (stock.is_bearish ? 'bearish' : 'neutral');
+    const trendIcon = stock.is_bullish ? 'fa-arrow-up' : (stock.is_bearish ? 'fa-arrow-down' : 'fa-minus');
+    const trendText = stock.is_bullish ? 'Bullish' : (stock.is_bearish ? 'Bearish' : 'Neutral');
+    
+    const dataStatusClass = stock.days_behind <= 3 ? 'data-fresh' : 'data-stale';
+    const dataStatusText = stock.days_behind <= 3 ? 'Fresh' : `${stock.days_behind}d old`;
+    
+    return `
+        <div class="card h-100 stock-card" style="cursor: pointer;" onclick="showStockModal('${stock.symbol}')">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="card-title mb-0">${stock.symbol}</h5>
+                    <div class="text-end">
+                        <span class="badge status-badge ${dataStatusClass}">${dataStatusText}</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <div class="metric-value">$${stock.current_price}</div>
+                        <div class="metric-label">Current Price</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="metric-value ${trendClass}">
+                            <i class="fas ${trendIcon}"></i>
+                        </div>
+                        <div class="metric-label">${trendText}</div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-6">
+                        <small class="text-muted">Growth: <strong>${stock.growth_percent}%</strong></small>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted">RSI: <strong>${stock.rsi}</strong></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function showStockModal(symbol) {
+    currentStock = symbol;
+    $('#stockModalTitle').text(`${symbol} - Stock Details`);
+    $('#stockModalBody').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>');
+    $('#stockModal').modal('show');
+    
+    $.ajax({
+        url: `/api/stock/${symbol}`,
+        method: 'GET',
+        success: function(data) {
+            displayStockDetails(data);
+        },
+        error: function(xhr, status, error) {
+            $('#stockModalBody').html('<div class="alert alert-danger">Failed to load stock details</div>');
+        }
+    });
+}
+
+function displayStockDetails(stock) {
+    const trendClass = stock.is_bullish ? 'bullish' : (stock.is_bearish ? 'bearish' : 'neutral');
+    const trendIcon = stock.is_bullish ? 'fa-arrow-up' : (stock.is_bearish ? 'fa-arrow-down' : 'fa-minus');
+    const trendText = stock.is_bullish ? 'Bullish' : (stock.is_bearish ? 'Bearish' : 'Neutral');
+    
+    const html = `
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card metric-card">
+                    <div class="card-body text-center">
+                        <h2 class="metric-value">$${stock.current_price}</h2>
+                        <div class="metric-label">Current Price</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h2 class="metric-value ${trendClass}">
+                            <i class="fas ${trendIcon}"></i>
+                        </h2>
+                        <div class="metric-label">${trendText}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h6>Performance</h6>
+                        <p class="mb-1">Growth: <strong>${stock.growth_percent}%</strong></p>
+                        <p class="mb-1">Volatility: <strong>${stock.volatility}</strong></p>
+                        <p class="mb-0">Volume: <strong>${stock.volume.toLocaleString()}</strong></p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h6>Technical Indicators</h6>
+                        <p class="mb-1">RSI: <strong>${stock.rsi}</strong></p>
+                        <p class="mb-1">MACD: <strong>${stock.macd}</strong></p>
+                        <p class="mb-0">50MA: <strong>$${stock.ma_50}</strong></p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h6>Data Info</h6>
+                        <p class="mb-1">Last Update: <strong>${stock.last_updated}</strong></p>
+                        <p class="mb-1">Days Behind: <strong>${stock.days_behind}</strong></p>
+                        <p class="mb-0">Data Points: <strong>${stock.data_points}</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    $('#stockModalBody').html(html);
+}
+
+function viewFullAnalysis() {
+    if (currentStock) {
+        window.open(`/stock/${currentStock}`, '_blank');
+    }
+}
+
+function analyzeStock() {
+    const symbol = $('#stockSymbol').val().trim().toUpperCase();
+    if (!symbol) {
+        showError('Please enter a stock symbol');
+        return;
+    }
+    
+    window.open(`/stock/${symbol}`, '_blank');
+}
+
+function refreshAllData() {
+    showInfo('Refreshing all data...');
+    loadStocks();
+}
+
+function generateReport() {
+    window.open('/reports', '_blank');
+}
+
+function updateSystemStatus() {
+    $('#lastUpdated').text(new Date().toLocaleString());
+}
+
+function updateCacheStatus(stocks) {
+    const freshCount = stocks.filter(s => s.days_behind <= 3).length;
+    const staleCount = stocks.length - freshCount;
+    
+    if (staleCount === 0) {
+        $('#cacheStatus').removeClass('bg-secondary bg-warning bg-danger').addClass('bg-success').text('Fresh');
+    } else if (freshCount > 0) {
+        $('#cacheStatus').removeClass('bg-secondary bg-success bg-danger').addClass('bg-warning').text('Mixed');
+    } else {
+        $('#cacheStatus').removeClass('bg-secondary bg-success bg-warning').addClass('bg-danger').text('Stale');
+    }
+}
+
+function showError(message) {
+    // Simple toast notification
+    const toast = $(`
+        <div class="toast align-items-center text-white bg-danger border-0" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `);
+    
+    $('body').append(toast);
+    toast.toast('show');
+    setTimeout(() => toast.remove(), 5000);
+}
+
+function showInfo(message) {
+    const toast = $(`
+        <div class="toast align-items-center text-white bg-info border-0" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `);
+    
+    $('body').append(toast);
+    toast.toast('show');
+    setTimeout(() => toast.remove(), 3000);
+}
+</script>
+{% endblock %}

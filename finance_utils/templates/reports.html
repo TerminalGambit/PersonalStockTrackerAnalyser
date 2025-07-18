@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-file-alt me-2"></i>Reports</h1>
+            <div>
+                <button class="btn btn-primary me-2" onclick="generateJSONReport()">
+                    <i class="fas fa-download me-2"></i>Generate JSON Report
+                </button>
+                <button class="btn btn-success" onclick="generatePDFReport()">
+                    <i class="fas fa-file-pdf me-2"></i>Generate PDF Report
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Generation Options -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-cog me-2"></i>Report Options</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="symbolsInput" class="form-label">Stock Symbols</label>
+                    <input type="text" id="symbolsInput" class="form-control" 
+                           placeholder="Enter symbols (e.g., AAPL,NVDA,GOOGL)" 
+                           value="AAPL">
+                    <div class="form-text">Separate multiple symbols with commas</div>
+                </div>
+                <div class="mb-3">
+                    <label for="reportType" class="form-label">Report Type</label>
+                    <select id="reportType" class="form-select">
+                        <option value="comprehensive">Comprehensive Analysis</option>
+                        <option value="summary">Summary Report</option>
+                        <option value="technical">Technical Analysis Only</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="includeCharts" checked>
+                        <label class="form-check-label" for="includeCharts">
+                            Include Technical Charts
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Report Types</h5>
+            </div>
+            <div class="card-body">
+                <h6><i class="fas fa-file-code me-2"></i>JSON Report</h6>
+                <p class="small">Structured data format perfect for APIs and programmatic analysis.</p>
+                
+                <h6><i class="fas fa-file-pdf me-2"></i>PDF Report</h6>
+                <p class="small">Professional LaTeX-generated report with charts, tables, and analysis.</p>
+                
+                <h6><i class="fas fa-chart-line me-2"></i>Features</h6>
+                <ul class="small">
+                    <li>Technical indicators (RSI, MACD, Bollinger Bands)</li>
+                    <li>Price charts with moving averages</li>
+                    <li>Volume analysis</li>
+                    <li>Trend classification</li>
+                    <li>Risk assessment</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Status -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Report Status</h5>
+            </div>
+            <div class="card-body">
+                <div id="reportStatus" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Available Reports -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-folder-open me-2"></i>Available Reports</h5>
+                    <button class="btn btn-outline-primary btn-sm" onclick="loadReportsList()">
+                        <i class="fas fa-sync-alt me-2"></i>Refresh
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="reportsLoading" class="text-center" style="display: none;">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p class="mt-2">Loading reports...</p>
+                </div>
+                <div id="reportsList">
+                    <!-- Reports will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Generate JSON Report (original functionality)
+    function generateJSONReport() {
+        const statusDiv = document.getElementById('reportStatus');
+        statusDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin me-2"></i>Generating JSON report...</div>';
+        
+        fetch('/api/generate_report')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>JSON report generated successfully! 
+                            <a href="/api/download_report" class="btn btn-sm btn-success ms-2">
+                                <i class="fas fa-download me-2"></i>Download JSON Report
+                            </a>
+                        </div>
+                    `;
+                } else {
+                    statusDiv.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>Error: ${data.message}</div>`;
+                }
+            })
+            .catch(error => {
+                statusDiv.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>Error generating JSON report: ${error.message}</div>`;
+            });
+    }
+
+    // Generate PDF Report (new LaTeX functionality)
+    function generatePDFReport() {
+        const statusDiv = document.getElementById('reportStatus');
+        const symbols = document.getElementById('symbolsInput').value.trim();
+        const reportType = document.getElementById('reportType').value;
+        
+        if (!symbols) {
+            statusDiv.innerHTML = '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>Please enter at least one stock symbol.</div>';
+            return;
+        }
+        
+        statusDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin me-2"></i>Generating PDF report... This may take a few minutes.</div>';
+        
+        const payload = {
+            symbols: symbols.split(',').map(s => s.trim().toUpperCase()),
+            report_type: reportType
+        };
+        
+        fetch('/api/generate_latex_report', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                statusDiv.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>PDF report generated successfully! 
+                        <a href="/api/download_report?path=${encodeURIComponent(data.pdf_path)}" class="btn btn-sm btn-success ms-2">
+                            <i class="fas fa-file-pdf me-2"></i>Download PDF Report
+                        </a>
+                    </div>
+                `;
+                // Refresh the reports list
+                loadReportsList();
+            } else {
+                statusDiv.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>Error: ${data.message}</div>`;
+            }
+        })
+        .catch(error => {
+            statusDiv.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>Error generating PDF report: ${error.message}</div>`;
+        });
+    }
+
+    // Load and display available reports
+    function loadReportsList() {
+        const loadingDiv = document.getElementById('reportsLoading');
+        const reportsDiv = document.getElementById('reportsList');
+        
+        loadingDiv.style.display = 'block';
+        reportsDiv.innerHTML = '';
+        
+        fetch('/api/list_reports')
+            .then(response => response.json())
+            .then(data => {
+                loadingDiv.style.display = 'none';
+                
+                if (data.success && data.reports.length > 0) {
+                    let html = '<div class="row">';
+                    
+                    data.reports.forEach(report => {
+                        const reportDate = new Date(report.created_at).toLocaleString();
+                        const fileSize = formatFileSize(report.file_size);
+                        
+                        html += `
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="card-title">
+                                                    <i class="fas fa-file-pdf me-2 text-danger"></i>
+                                                    ${report.symbols.join(', ')}
+                                                </h6>
+                                                <p class="card-text small text-muted">
+                                                    <i class="fas fa-clock me-1"></i>${reportDate}<br>
+                                                    <i class="fas fa-hdd me-1"></i>${fileSize}<br>
+                                                    <i class="fas fa-tag me-1"></i>${report.report_type}
+                                                </p>
+                                            </div>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                    <i class="fas fa-ellipsis-v"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li>
+                                                        <a class="dropdown-item" href="/api/download_report?path=${encodeURIComponent(report.pdf_path)}">
+                                                            <i class="fas fa-download me-2"></i>Download PDF
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item" href="/api/download_report?path=${encodeURIComponent(report.latex_path)}">
+                                                            <i class="fas fa-file-code me-2"></i>Download LaTeX
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                    reportsDiv.innerHTML = html;
+                } else {
+                    reportsDiv.innerHTML = `
+                        <div class="text-center py-4">
+                            <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No reports available. Generate your first report above!</p>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                loadingDiv.style.display = 'none';
+                reportsDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Error loading reports: ${error.message}
+                    </div>
+                `;
+            });
+    }
+
+    // Format file size helper function
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Load reports list when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        loadReportsList();
+    });
+</script>
+{% endblock %}
