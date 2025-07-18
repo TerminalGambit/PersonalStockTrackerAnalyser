@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Analytics Hub - Combined Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .mode-switcher {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 100px 0;
+            text-align: center;
+        }
+        .feature-card {
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        .metric-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .forex-card {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .stock-card {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .nav-tabs .nav-link {
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+        }
+        .nav-tabs .nav-link.active {
+            border-bottom-color: #667eea;
+            background: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-chart-line me-2"></i>Financial Analytics Hub
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/stocks">Stocks</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/forex">Forex</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/api/status">API</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <h1 class="display-4 mb-4">
+                        <i class="fas fa-chart-area me-3"></i>
+                        Financial Analytics Hub
+                    </h1>
+                    <p class="lead mb-4">
+                        Advanced stock and forex analysis with real-time data visualization, 
+                        technical indicators, and comprehensive market insights.
+                    </p>
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="/stocks" class="btn btn-light btn-lg">
+                            <i class="fas fa-chart-bar me-2"></i>Explore Stocks
+                        </a>
+                        <a href="/forex" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-exchange-alt me-2"></i>Forex Markets
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12 text-center mb-5">
+                    <h2 class="display-5">Platform Features</h2>
+                    <p class="lead">Comprehensive tools for financial analysis and market insights</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="card feature-card h-100 border-0 shadow-sm" onclick="window.location.href='/stocks'">
+                        <div class="card-body text-center p-4">
+                            <div class="stock-card">
+                                <i class="fas fa-chart-line fa-3x mb-3"></i>
+                                <h5 class="card-title">Stock Analysis</h5>
+                                <p class="card-text">
+                                    Real-time stock data with advanced technical indicators, 
+                                    candlestick charts, and comprehensive market analysis.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card feature-card h-100 border-0 shadow-sm" onclick="window.location.href='/forex'">
+                        <div class="card-body text-center p-4">
+                            <div class="forex-card">
+                                <i class="fas fa-exchange-alt fa-3x mb-3"></i>
+                                <h5 class="card-title">Forex Trading</h5>
+                                <p class="card-text">
+                                    Currency pair analysis with 17 major, minor, and exotic pairs. 
+                                    Real-time rates and technical analysis tools.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card feature-card h-100 border-0 shadow-sm" onclick="loadApiStatus()">
+                        <div class="card-body text-center p-4">
+                            <div class="metric-card">
+                                <i class="fas fa-cogs fa-3x mb-3"></i>
+                                <h5 class="card-title">API Integration</h5>
+                                <p class="card-text">
+                                    Robust API endpoints for data access, real-time updates, 
+                                    and seamless integration with external applications.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Access Section -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12 text-center mb-5">
+                    <h2 class="display-5">Quick Access</h2>
+                    <p class="lead">Jump straight to your preferred market analysis</p>
+                </div>
+            </div>
+            
+            <!-- Market Tabs -->
+            <div class="row">
+                <div class="col-12">
+                    <ul class="nav nav-tabs nav-justified mb-4" id="marketTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="forex-tab" data-bs-toggle="tab" data-bs-target="#forex" type="button" role="tab">
+                                <i class="fas fa-exchange-alt me-2"></i>Forex Markets
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="stocks-tab" data-bs-toggle="tab" data-bs-target="#stocks" type="button" role="tab">
+                                <i class="fas fa-chart-bar me-2"></i>Stock Markets
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="api-tab" data-bs-toggle="tab" data-bs-target="#api" type="button" role="tab">
+                                <i class="fas fa-code me-2"></i>API Status
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content" id="marketTabsContent">
+                        <!-- Forex Tab -->
+                        <div class="tab-pane fade show active" id="forex" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5><i class="fas fa-star me-2"></i>Major Pairs</h5>
+                                    <div class="list-group">
+                                        <a href="/forex/pair/EUR/USD" class="list-group-item list-group-item-action">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">EUR/USD</h6>
+                                                <small class="text-success">+0.12%</small>
+                                            </div>
+                                            <small>Euro / US Dollar</small>
+                                        </a>
+                                        <a href="/forex/pair/GBP/USD" class="list-group-item list-group-item-action">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">GBP/USD</h6>
+                                                <small class="text-danger">-0.05%</small>
+                                            </div>
+                                            <small>British Pound / US Dollar</small>
+                                        </a>
+                                        <a href="/forex/pair/USD/JPY" class="list-group-item list-group-item-action">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">USD/JPY</h6>
+                                                <small class="text-success">+0.08%</small>
+                                            </div>
+                                            <small>US Dollar / Japanese Yen</small>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5><i class="fas fa-chart-area me-2"></i>Market Overview</h5>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <div class="card border-0 bg-success text-white">
+                                                <div class="card-body text-center">
+                                                    <h3>17</h3>
+                                                    <small>Currency Pairs</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="card border-0 bg-info text-white">
+                                                <div class="card-body text-center">
+                                                    <h3>4</h3>
+                                                    <small>Active Sessions</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Stocks Tab -->
+                        <div class="tab-pane fade" id="stocks" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>Stock Analysis</strong> - Advanced technical analysis tools with real-time data visualization.
+                                    </div>
+                                    <div class="text-center">
+                                        <a href="/stocks" class="btn btn-primary btn-lg">
+                                            <i class="fas fa-chart-line me-2"></i>Go to Stock Dashboard
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- API Tab -->
+                        <div class="tab-pane fade" id="api" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div id="apiStatus" class="text-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <p class="mt-3">Loading API status...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5><i class="fas fa-chart-line me-2"></i>Financial Analytics Hub</h5>
+                    <p>Advanced financial analysis platform with real-time data and comprehensive market insights.</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="/stocks" class="text-white-50">Stock Analysis</a></li>
+                        <li><a href="/forex" class="text-white-50">Forex Trading</a></li>
+                        <li><a href="/api/status" class="text-white-50">API Documentation</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="mt-4">
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <p>&copy; 2025 Financial Analytics Hub. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Load API status
+        function loadApiStatus() {
+            fetch('/api/status')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('apiStatus').innerHTML = `
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title text-success">
+                                    <i class="fas fa-check-circle me-2"></i>API Status: ${data.status}
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Forex Enabled:</strong> ${data.forex_enabled ? 'Yes' : 'No'}</p>
+                                        <p><strong>Stocks Enabled:</strong> ${data.stocks_enabled ? 'Yes' : 'No'}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Mode:</strong> ${data.mode}</p>
+                                        <p><strong>Last Updated:</strong> ${new Date(data.timestamp).toLocaleString()}</p>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <h6>Available Endpoints:</h6>
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item">
+                                            <a href="/api/forex/rates" target="_blank">/api/forex/rates</a> - Current forex rates
+                                        </li>
+                                        <li class="list-group-item">
+                                            <a href="/api/forex/pairs" target="_blank">/api/forex/pairs</a> - Available forex pairs
+                                        </li>
+                                        <li class="list-group-item">
+                                            <a href="/api/status" target="_blank">/api/status</a> - System status
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                })
+                .catch(error => {
+                    document.getElementById('apiStatus').innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Error loading API status: ${error.message}
+                        </div>
+                    `;
+                });
+        }
+
+        // Load API status when API tab is shown
+        document.getElementById('api-tab').addEventListener('shown.bs.tab', loadApiStatus);
+    </script>
+</body>
+</html>

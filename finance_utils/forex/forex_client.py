@@ -232,7 +232,7 @@ class ForexClient:
         if not data:
             return None
         
-        time_series = data.get('Time Series FX (Weekly)', {})\n        
+        time_series = data.get('Time Series FX (Weekly)', {})
         if not time_series:
             logger.error(f"No weekly data found for {from_currency}/{to_currency}")
             return None

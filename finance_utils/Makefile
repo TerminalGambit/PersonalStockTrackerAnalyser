@@ -1,16 +1,24 @@
-# Stock Analysis Dashboard Makefile
-# Alpha Vantage Integration
+# Financial Analytics Hub Makefile
+# Combined Stock & Forex Dashboard
 
 # Load environment variables
 include .env
 export
 
 # Project settings
-PROJECT_NAME=stock-analysis-dashboard
-PYTHON=python3
+PROJECT_NAME=financial-analytics-hub
+PYTHON=/usr/local/bin/python3.13
 PIP=pip3
-FLASK_APP=app_alpha_vantage.py
-FLASK_PORT=5002
+FLASK_APP=app_combined.py
+FLASK_PORT=5001
+
+# Data source configuration
+DATA_SOURCE_MODE=alpha_vantage
+DISABLE_YAHOO_FINANCE=true
+
+# LaTeX report settings
+LATEX_OUTPUT_DIR=latex_reports
+CONFIG_FILE=config.json
 
 # Colors for output
 RED=\033[0;31m
@@ -25,7 +33,7 @@ NC=\033[0m # No Color
 # Default target
 .PHONY: help
 help:
-	@echo "$(CYAN)📊 Stock Analysis Dashboard - Alpha Vantage Integration$(NC)"
+	@echo "$(CYAN)📊 Financial Analytics Hub - Combined Stock & Forex Dashboard$(NC)"
 	@echo "$(WHITE)=================================================$(NC)"
 	@echo ""
 	@echo "$(YELLOW)Available commands:$(NC)"
@@ -34,10 +42,18 @@ help:
 	@echo "$(GREEN)  dev$(NC)            - Run in development mode with hot reload"
 	@echo "$(GREEN)  test$(NC)           - Run tests and data validation"
 	@echo "$(GREEN)  test-api$(NC)       - Test Alpha Vantage API connection"
+	@echo "$(GREEN)  test-forex$(NC)     - Run forex API tests"
 	@echo "$(GREEN)  clean$(NC)          - Clean cache and temporary files"
 	@echo "$(GREEN)  install$(NC)        - Install Python dependencies"
 	@echo "$(GREEN)  status$(NC)         - Check API status and usage"
 	@echo "$(GREEN)  reports$(NC)        - Generate sample reports"
+	@echo "$(GREEN)  latex-report$(NC)   - Generate LaTeX PDF report"
+	@echo "$(GREEN)  latex-favorites$(NC) - Generate report for favorite stocks"
+	@echo "$(GREEN)  latex-sample$(NC)   - Generate sample LaTeX reports"
+	@echo "$(GREEN)  latex-quick$(NC)    - Quick LaTeX report (no auto-open)"
+	@echo "$(GREEN)  open-latest$(NC)    - Open most recent PDF report"
+	@echo "$(GREEN)  show-config$(NC)    - Show favorite stocks configuration"
+	@echo "$(GREEN)  cache-info$(NC)     - Show cache information"
 	@echo "$(GREEN)  backup$(NC)         - Backup data and configuration"
 	@echo "$(GREEN)  lint$(NC)           - Run code linting"
 	@echo "$(GREEN)  docs$(NC)           - Generate documentation"
@@ -52,7 +68,7 @@ help:
 # Setup environment
 .PHONY: setup
 setup:
-	@echo "$(CYAN)🔧 Setting up Stock Analysis Dashboard...$(NC)"
+	@echo "$(CYAN)🔧 Setting up Financial Analytics Hub...$(NC)"
 	@$(MAKE) install
 	@$(MAKE) create-dirs
 	@$(MAKE) test-api
@@ -66,6 +82,8 @@ install:
 	@$(PIP) install flask plotly alpha-vantage pandas numpy python-dotenv
 	@$(PIP) install requests matplotlib seaborn
 	@$(PIP) install pytest flake8 black isort
+	@echo "$(YELLOW)📄 Checking for LaTeX installation...$(NC)"
+	@which pdflatex > /dev/null && echo "$(GREEN)✅ LaTeX found$(NC)" || echo "$(YELLOW)⚠️  LaTeX not found - install MacTeX for PDF generation$(NC)"
 	@echo "$(GREEN)✅ Dependencies installed$(NC)"
 
 # Create necessary directories
@@ -75,6 +93,7 @@ create-dirs:
 	@mkdir -p $(DATA_CACHE_DIR)
 	@mkdir -p logs
 	@mkdir -p reports
+	@mkdir -p $(LATEX_OUTPUT_DIR)
 	@mkdir -p static/css
 	@mkdir -p static/js
 	@mkdir -p static/img
@@ -83,7 +102,7 @@ create-dirs:
 # Run the Flask application
 .PHONY: run
 run:
-	@echo "$(CYAN)🚀 Starting Stock Analysis Dashboard...$(NC)"
+	@echo "$(CYAN)🚀 Starting Financial Analytics Hub...$(NC)"
 	@echo "$(YELLOW)Access at: http://localhost:$(FLASK_PORT)$(NC)"
 	@ALPHA_VANTAGE_API_KEY=$(ALPHA_VANTAGE_API_KEY) $(PYTHON) $(FLASK_APP)
 
@@ -100,11 +119,19 @@ test-api:
 	@echo "$(BLUE)🧪 Testing Alpha Vantage API connection...$(NC)"
 	@ALPHA_VANTAGE_API_KEY=$(ALPHA_VANTAGE_API_KEY) $(PYTHON) -c "from alpha_vantage_adapter import AlphaVantageManager; manager = AlphaVantageManager(); manager.test_connection()"
 
+# Run forex API tests
+.PHONY: test-forex
+test-forex:
+	@echo "$(BLUE)🧪 Running forex API tests...$(NC)"
+	@$(PYTHON) test_forex_api_comprehensive.py
+	@echo "$(GREEN)✅ Forex API tests passed$(NC)"
+
 # Run comprehensive tests
 .PHONY: test
 test:
 	@echo "$(BLUE)🧪 Running tests...$(NC)"
 	@$(MAKE) test-api
+	@$(MAKE) test-forex
 	@ALPHA_VANTAGE_API_KEY=$(ALPHA_VANTAGE_API_KEY) $(PYTHON) alpha_vantage_adapter.py
 	@echo "$(GREEN)✅ All tests passed$(NC)"
 
@@ -125,6 +152,76 @@ reports:
 	@mkdir -p reports
 	@curl -s "http://localhost:$(FLASK_PORT)/api/generate_report" -o reports/sample_report_$(shell date +%Y%m%d_%H%M%S).json || echo "$(RED)❌ Dashboard not running$(NC)"
 	@echo "$(GREEN)✅ Reports generated in reports/$(NC)"
+
+# Generate LaTeX PDF report
+.PHONY: latex-report
+latex-report:
+	@echo "$(BLUE)📄 Generating LaTeX PDF report...$(NC)"
+	@mkdir -p $(LATEX_OUTPUT_DIR)
+	@DATA_SOURCE_MODE=$(DATA_SOURCE_MODE) DISABLE_YAHOO_FINANCE=$(DISABLE_YAHOO_FINANCE) ALPHA_VANTAGE_API_KEY=$(ALPHA_VANTAGE_API_KEY) $(PYTHON) latex_report_generator.py --output $(LATEX_OUTPUT_DIR)
+	@echo "$(GREEN)✅ LaTeX report generated in $(LATEX_OUTPUT_DIR)/$(NC)"
+
+# Generate LaTeX report for favorite stocks
+.PHONY: latex-favorites
+latex-favorites:
+	@echo "$(BLUE)📄 Generating LaTeX PDF report for favorite stocks...$(NC)"
+	@echo "$(YELLOW)Favorite stocks: $$(cat $(CONFIG_FILE) | python3 -c "import sys, json; print(', '.join(json.load(sys.stdin)['favorite_stocks']))")"
+	@mkdir -p $(LATEX_OUTPUT_DIR)
+	@DATA_SOURCE_MODE=$(DATA_SOURCE_MODE) DISABLE_YAHOO_FINANCE=$(DISABLE_YAHOO_FINANCE) ALPHA_VANTAGE_API_KEY=$(ALPHA_VANTAGE_API_KEY) $(PYTHON) latex_report_generator.py --output $(LATEX_OUTPUT_DIR)
+	@echo "$(GREEN)✅ Favorite stocks LaTeX report generated in $(LATEX_OUTPUT_DIR)/$(NC)"
+
+# Generate sample LaTeX reports
+.PHONY: latex-sample
+latex-sample:
+	@echo "$(BLUE)📄 Generating sample LaTeX reports...$(NC)"
+	@mkdir -p $(LATEX_OUTPUT_DIR)
+	@echo "$(YELLOW)Generating comprehensive report...$(NC)"
+	@DATA_SOURCE_MODE=$(DATA_SOURCE_MODE) DISABLE_YAHOO_FINANCE=$(DISABLE_YAHOO_FINANCE) ALPHA_VANTAGE_API_KEY=$(ALPHA_VANTAGE_API_KEY) $(PYTHON) latex_report_generator.py AAPL MSFT --type comprehensive --output $(LATEX_OUTPUT_DIR)
+	@echo "$(YELLOW)Generating technical analysis report...$(NC)"
+	@DATA_SOURCE_MODE=$(DATA_SOURCE_MODE) DISABLE_YAHOO_FINANCE=$(DISABLE_YAHOO_FINANCE) ALPHA_VANTAGE_API_KEY=$(ALPHA_VANTAGE_API_KEY) $(PYTHON) latex_report_generator.py GOOGL TSLA --type technical --output $(LATEX_OUTPUT_DIR)
+	@echo "$(YELLOW)Generating summary report...$(NC)"
+	@DATA_SOURCE_MODE=$(DATA_SOURCE_MODE) DISABLE_YAHOO_FINANCE=$(DISABLE_YAHOO_FINANCE) ALPHA_VANTAGE_API_KEY=$(ALPHA_VANTAGE_API_KEY) $(PYTHON) latex_report_generator.py NVDA --type summary --output $(LATEX_OUTPUT_DIR)
+	@echo "$(GREEN)✅ Sample LaTeX reports generated in $(LATEX_OUTPUT_DIR)/$(NC)"
+
+# Generate quick LaTeX report (no auto-open)
+.PHONY: latex-quick
+latex-quick:
+	@echo "$(BLUE)📄 Generating quick LaTeX report (no auto-open)...$(NC)"
+	@mkdir -p $(LATEX_OUTPUT_DIR)
+	@DATA_SOURCE_MODE=$(DATA_SOURCE_MODE) DISABLE_YAHOO_FINANCE=$(DISABLE_YAHOO_FINANCE) ALPHA_VANTAGE_API_KEY=$(ALPHA_VANTAGE_API_KEY) $(PYTHON) -c "from latex_report_generator import LatexReportGenerator; gen = LatexReportGenerator(auto_open=False); print('Report:', gen.generate_report(['AAPL']))"
+	@echo "$(GREEN)✅ Quick LaTeX report generated in $(LATEX_OUTPUT_DIR)/$(NC)"
+
+# Open most recent PDF report
+.PHONY: open-latest
+open-latest:
+	@echo "$(BLUE)📖 Opening most recent PDF report...$(NC)"
+	@LATEST_PDF=$$(find $(LATEX_OUTPUT_DIR) -name "*.pdf" -type f -exec ls -t {} + | head -1); \
+	if [ -n "$$LATEST_PDF" ]; then \
+		echo "Opening: $$LATEST_PDF"; \
+		open "$$LATEST_PDF"; \
+	else \
+		echo "$(RED)❌ No PDF reports found in $(LATEX_OUTPUT_DIR)$(NC)"; \
+	fi
+
+# Show cache information
+.PHONY: cache-info
+cache-info:
+	@echo "$(CYAN)📋 Cache Information$(NC)"
+	@echo "$(WHITE)==================$(NC)"
+	@echo "Cache directory: $(DATA_CACHE_DIR)"
+	@echo "Cache files: $$(ls -1 $(DATA_CACHE_DIR)/*.pkl 2>/dev/null | wc -l | tr -d ' ')"
+	@echo "Total cache size: $$(du -sh $(DATA_CACHE_DIR) 2>/dev/null | cut -f1)"
+	@echo "Latest cache files:"
+	@ls -lt $(DATA_CACHE_DIR)/*.pkl 2>/dev/null | head -5 | while read line; do echo "  $$line"; done || echo "  No cache files found"
+
+# Show configuration
+.PHONY: show-config
+show-config:
+	@echo "$(CYAN)⚙️  Configuration$(NC)"
+	@echo "$(WHITE)===============$(NC)"
+	@echo "Config file: $(CONFIG_FILE)"
+	@echo "Favorite stocks: $$(cat $(CONFIG_FILE) | python3 -c "import sys, json; print(', '.join(json.load(sys.stdin)['favorite_stocks']))")"
+	@echo "Total favorite stocks: $$(cat $(CONFIG_FILE) | python3 -c "import sys, json; print(len(json.load(sys.stdin)['favorite_stocks']))")"
 
 # Clean cache and temporary files
 .PHONY: clean

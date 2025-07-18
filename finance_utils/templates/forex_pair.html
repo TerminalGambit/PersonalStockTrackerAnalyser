@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ pair }} - Forex Analysis</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .pair-header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 40px 0;
+            border-radius: 0 0 25px 25px;
+            margin-bottom: 30px;
+        }
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .info-badge {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            display: inline-block;
+            margin: 5px;
+        }
+        .signal-positive {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        .signal-negative {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ffa726 100%);
+        }
+        .signal-neutral {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-chart-line me-2"></i>Financial Analytics Hub
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">Dashboard</a>
+                <a class="nav-link" href="/forex">Forex</a>
+                <a class="nav-link active" href="#">{{ pair }}</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Pair Header -->
+    <div class="pair-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="display-4 mb-3">
+                        <i class="fas fa-exchange-alt me-3"></i>{{ pair }}
+                    </h1>
+                    <p class="lead mb-0">{{ pair_info.name if pair_info else 'Currency Pair Analysis' }}</p>
+                    {% if pair_info %}
+                    <p class="mb-0">{{ pair_info.description }}</p>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="display-6 fw-bold">{{ "%.4f"|format(summary.current_price) }}</div>
+                    <div class="h5 mb-0">
+                        {% if summary.daily_return >= 0 %}
+                        <span class="text-success">
+                            <i class="fas fa-arrow-up"></i> +{{ "%.4f"|format(summary.daily_return) }}%
+                        </span>
+                        {% else %}
+                        <span class="text-danger">
+                            <i class="fas fa-arrow-down"></i> {{ "%.4f"|format(summary.daily_return) }}%
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-primary">
+                            <i class="fas fa-chart-area me-2"></i>Current Price
+                        </h5>
+                        <h3 class="mb-0">{{ "%.4f"|format(summary.current_price) }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-success">
+                            <i class="fas fa-arrow-up me-2"></i>High
+                        </h5>
+                        <h3 class="mb-0">{{ "%.4f"|format(summary.high) }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-danger">
+                            <i class="fas fa-arrow-down me-2"></i>Low
+                        </h5>
+                        <h3 class="mb-0">{{ "%.4f"|format(summary.low) }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-info">
+                            <i class="fas fa-volume-up me-2"></i>Volume
+                        </h5>
+                        <h3 class="mb-0">{{ "{:,}".format(summary.volume) }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technical Indicators -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="metric-card">
+                    <h5><i class="fas fa-chart-line me-2"></i>Technical Indicators</h5>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="text-center">
+                                <div class="h4 mb-1">{{ "%.1f"|format(summary.rsi) }}</div>
+                                <small>RSI</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <div class="h4 mb-1">{{ "%.4f"|format(summary.macd) }}</div>
+                                <small>MACD</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="metric-card">
+                    <h5><i class="fas fa-chart-area me-2"></i>Moving Averages</h5>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="text-center">
+                                <div class="h4 mb-1">{{ "%.4f"|format(summary.sma_20) }}</div>
+                                <small>SMA 20</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <div class="h4 mb-1">{{ "%.4f"|format(summary.sma_50) }}</div>
+                                <small>SMA 50</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="metric-card">
+                    <h5><i class="fas fa-chart-bar me-2"></i>Market Stats</h5>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="text-center">
+                                <div class="h4 mb-1">{{ "%.4f"|format(summary.volatility) }}</div>
+                                <small>Volatility</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <div class="h4 mb-1">{{ "{:,}".format(summary.data_points) }}</div>
+                                <small>Data Points</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pair Information -->
+        {% if pair_info %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-info-circle me-2"></i>Pair Information
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="info-badge">
+                                    <i class="fas fa-tag me-2"></i>{{ pair_info.category.title() }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="info-badge">
+                                    <i class="fas fa-arrows-alt-h me-2"></i>Pip: {{ pair_info.pip_value }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="info-badge">
+                                    <i class="fas fa-chart-line me-2"></i>Spread: {{ pair_info.typical_spread }} pips
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Trading Signals -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-signal me-2"></i>Trading Signals
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="info-badge 
+                                {% if summary.rsi > 70 %}signal-negative
+                                {% elif summary.rsi < 30 %}signal-positive
+                                {% else %}signal-neutral{% endif %}">
+                                    <i class="fas fa-chart-line me-2"></i>
+                                    RSI: {% if summary.rsi > 70 %}Overbought
+                                    {% elif summary.rsi < 30 %}Oversold
+                                    {% else %}Neutral{% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="info-badge 
+                                {% if summary.macd > 0 %}signal-positive
+                                {% else %}signal-negative{% endif %}">
+                                    <i class="fas fa-chart-area me-2"></i>
+                                    MACD: {% if summary.macd > 0 %}Bullish{% else %}Bearish{% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="info-badge 
+                                {% if summary.sma_20 > summary.sma_50 %}signal-positive
+                                {% else %}signal-negative{% endif %}">
+                                    <i class="fas fa-chart-bar me-2"></i>
+                                    Trend: {% if summary.sma_20 > summary.sma_50 %}Bullish{% else %}Bearish{% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="info-badge 
+                                {% if summary.daily_return > 0 %}signal-positive
+                                {% else %}signal-negative{% endif %}">
+                                    <i class="fas fa-arrow-{% if summary.daily_return > 0 %}up{% else %}down{% endif %} me-2"></i>
+                                    Daily: {% if summary.daily_return > 0 %}+{% endif %}{{ "%.4f"|format(summary.daily_return) }}%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Price Chart -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="chart-container">
+                    <h5 class="mb-3">
+                        <i class="fas fa-chart-line me-2"></i>Price Chart with Moving Averages
+                    </h5>
+                    <div id="candlestick-chart"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technical Analysis Chart -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="chart-container">
+                    <h5 class="mb-3">
+                        <i class="fas fa-chart-area me-2"></i>Technical Analysis
+                    </h5>
+                    <div id="technical-chart"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">
+                            <i class="fas fa-rocket me-2"></i>Quick Actions
+                        </h5>
+                        <div class="btn-group" role="group">
+                            <a href="/forex" class="btn btn-primary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Forex
+                            </a>
+                            <a href="/api/forex/pair/{{ pair }}" class="btn btn-info" target="_blank">
+                                <i class="fas fa-code me-2"></i>View API Data
+                            </a>
+                            <button class="btn btn-success" onclick="refreshData()">
+                                <i class="fas fa-sync me-2"></i>Refresh Data
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5><i class="fas fa-chart-line me-2"></i>{{ pair }} Analysis</h5>
+                    <p>Last updated: {{ summary.last_updated }}</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <small class="text-muted">
+                        Data provided for demonstration purposes only. Not for actual trading.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Initialize charts
+        document.addEventListener('DOMContentLoaded', function() {
+            // Parse and display candlestick chart
+            var candlestickData = {{ candlestick_chart|safe }};
+            Plotly.newPlot('candlestick-chart', candlestickData.data, candlestickData.layout, {responsive: true});
+            
+            // Parse and display technical chart
+            var technicalData = {{ technical_chart|safe }};
+            Plotly.newPlot('technical-chart', technicalData.data, technicalData.layout, {responsive: true});
+        });
+        
+        // Refresh data function
+        function refreshData() {
+            location.reload();
+        }
+        
+        // Auto-refresh every 5 minutes
+        setInterval(function() {
+            console.log('Auto-refreshing data...');
+            refreshData();
+        }, 300000); // 5 minutes
+    </script>
+</body>
+</html>

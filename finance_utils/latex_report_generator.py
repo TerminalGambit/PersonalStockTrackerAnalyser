@@ -10,7 +10,8 @@ import json
 import shutil
 import tempfile
 import subprocess
-from datetime import datetime
+import pickle
+from datetime import datetime, timedelta
 from pathlib import Path
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -18,10 +19,23 @@ import pandas as pd
 import numpy as np
 from alpha_vantage_adapter import AlphaVantageManager, AlphaVantageStock
 
+# Load favorite stocks from config
+try:
+    with open('config.json') as config_file:
+        config = json.load(config_file)
+    FAVORITE_STOCKS = config.get('favorite_stocks', [])
+except FileNotFoundError:
+    print("⚠️ config.json not found. Using default stocks.")
+    FAVORITE_STOCKS = ['AAPL', 'MSFT', 'GOOGL']
+
 class LatexReportGenerator:
-    def __init__(self, output_dir="latex_reports"):
+    def __init__(self, output_dir="latex_reports", cache_dir=".stock_cache", auto_open=True):
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True)
+        self.cache_dir = Path(cache_dir)
+        self.cache_dir.mkdir(exist_ok=True)
+        self.auto_open = auto_open
+        self.cache_duration = timedelta(hours=1)  # Cache for 1 hour
         self.av_manager = AlphaVantageManager()
         
         # Set up matplotlib for better plots
@@ -72,14 +86,63 @@ class LatexReportGenerator:
         # Compile to PDF
         pdf_path = self._compile_latex(tex_file)
         
+        # Auto-open PDF if successful and requested
+        if pdf_path and pdf_path.suffix == '.pdf' and self.auto_open:
+            self._open_pdf(pdf_path)
+        
         return pdf_path, "Report generated successfully"
     
+    def _get_cache_path(self, symbol):
+        """Get cache file path for a symbol"""
+        return self.cache_dir / f"{symbol}_cache.pkl"
+    
+    def _is_cache_valid(self, cache_path):
+        """Check if cache file is still valid"""
+        if not cache_path.exists():
+            return False
+        
+        cache_time = datetime.fromtimestamp(cache_path.stat().st_mtime)
+        return datetime.now() - cache_time < self.cache_duration
+    
+    def _load_from_cache(self, symbol):
+        """Load stock data from cache"""
+        cache_path = self._get_cache_path(symbol)
+        
+        if self._is_cache_valid(cache_path):
+            try:
+                with open(cache_path, 'rb') as f:
+                    cached_data = pickle.load(f)
+                    print(f"📋 Loading cached data for {symbol}")
+                    return cached_data
+            except Exception as e:
+                print(f"⚠️ Error loading cache for {symbol}: {e}")
+                return None
+        return None
+    
+    def _save_to_cache(self, symbol, data):
+        """Save stock data to cache"""
+        cache_path = self._get_cache_path(symbol)
+        
+        try:
+            with open(cache_path, 'wb') as f:
+                pickle.dump(data, f)
+            print(f"💾 Cached data for {symbol}")
+        except Exception as e:
+            print(f"⚠️ Error saving cache for {symbol}: {e}")
+    
     def _collect_stock_data(self, symbols):
-        """Collect stock data for all symbols"""
+        """Collect stock data for all symbols with caching"""
         report_data = []
         
         for symbol in symbols:
             try:
+                # Try to load from cache first
+                cached_data = self._load_from_cache(symbol)
+                if cached_data:
+                    report_data.append(cached_data)
+                    continue
+                
+                # Fetch fresh data
                 stock = self.av_manager.get_stock(symbol)
                 if stock.is_valid():
                     summary = self.av_manager.get_stock_summary(symbol)
@@ -108,14 +171,18 @@ class LatexReportGenerator:
                     if 'ATR' in latest and pd.notna(latest['ATR']):
                         price_levels['atr'] = round(float(latest['ATR']), 2)
                     
-                    report_data.append({
+                    stock_data = {
                         'symbol': symbol,
                         'stock': stock,
                         'summary': summary,
                         'technical_signals': technical_signals,
                         'price_levels': price_levels,
                         'latest': latest
-                    })
+                    }
+                    
+                    # Save to cache
+                    self._save_to_cache(symbol, stock_data)
+                    report_data.append(stock_data)
                     
             except Exception as e:
                 print(f"Error collecting data for {symbol}: {e}")
@@ -652,12 +719,30 @@ Please consult with a qualified financial advisor before making investment decis
                 print(f"PDF generated successfully: {pdf_file}")
                 return pdf_file
             else:
-                print("PDF generation failed")
+                print(f"PDF generation failed")
                 return tex_file
                 
         except Exception as e:
             print(f"Error compiling LaTeX: {e}")
             return tex_file
+    
+    def _open_pdf(self, pdf_path):
+        """Auto-open PDF file on macOS"""
+        try:
+            if sys.platform == "darwin":  # macOS
+                subprocess.run(["open", str(pdf_path)], check=True)
+                print(f"📖 Opened PDF: {pdf_path}")
+            elif sys.platform == "linux":
+                subprocess.run(["xdg-open", str(pdf_path)], check=True)
+                print(f"📖 Opened PDF: {pdf_path}")
+            elif sys.platform == "win32":
+                os.startfile(str(pdf_path))
+                print(f"📖 Opened PDF: {pdf_path}")
+            else:
+                print(f"📄 PDF generated: {pdf_path}")
+        except Exception as e:
+            print(f"⚠️ Could not auto-open PDF: {e}")
+            print(f"📄 PDF generated: {pdf_path}")
     
     def generate_json_report(self, symbols):
         """Generate JSON report (for API compatibility)"""
@@ -686,7 +771,7 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(description='Generate LaTeX stock analysis reports')
-    parser.add_argument('symbols', nargs='+', help='Stock symbols to analyze')
+    parser.add_argument('symbols', nargs='*', default=FAVORITE_STOCKS, help='Stock symbols to analyze')
     parser.add_argument('--type', choices=['comprehensive', 'summary', 'technical'], 
                        default='comprehensive', help='Report type')
     parser.add_argument('--output', '-o', default='latex_reports', 
@@ -696,7 +781,7 @@ def main():
     
     # Generate report
     generator = LatexReportGenerator(args.output)
-    pdf_path, message = generator.generate_report(args.symbols, args.type)
+    pdf_path, message = generator.generate_report(args.symbols or FAVORITE_STOCKS, args.type)
     
     print(f"Report generation: {message}")
     if pdf_path:

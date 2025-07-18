@@ -1,6 +1,17 @@
 {% extends "base.html" %}
 
 {% block title %}Stock Analysis Dashboard{% endblock %}
+<style>
+    .metric-card {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+        color: white;
+        border: none;
+    }
+    .metric-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+    }
+</style>
 
 {% block content %}
 <!-- Page Header -->
